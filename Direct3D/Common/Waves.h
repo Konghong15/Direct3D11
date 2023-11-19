@@ -21,6 +21,7 @@ namespace common
 		inline UINT GetVertexCount() const;
 		inline UINT GetColumnCount() const;
 		inline UINT GetRowCount() const;
+		inline const DirectX::SimpleMath::Vector3& GetNormal(size_t index) const;
 
 	private:
 		UINT mNumRows;
@@ -38,6 +39,8 @@ namespace common
 
 		std::vector<DirectX::SimpleMath::Vector3> mPrevSolution;
 		std::vector<DirectX::SimpleMath::Vector3> mCurSolution;
+		std::vector<DirectX::SimpleMath::Vector3> mNormals;
+		std::vector<DirectX::SimpleMath::Vector3> mTangentX;
 	};
 
 	const DirectX::SimpleMath::Vector3& Waves::operator[](unsigned int i) const
@@ -60,5 +63,10 @@ namespace common
 	UINT Waves::GetRowCount() const
 	{
 		return mNumRows;
+	}
+	const DirectX::SimpleMath::Vector3& Waves::GetNormal(size_t index) const
+	{
+		assert(index < mNormals.size());
+		return mNormals[index];
 	}
 }

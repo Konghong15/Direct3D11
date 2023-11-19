@@ -4,6 +4,7 @@
 #include <d3dcompiler.h>
 
 #include "D3DProcessor.h"
+#include "D3DUtil.h"
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -49,16 +50,16 @@ namespace common
 
 	D3DProcessor::~D3DProcessor()
 	{
-		SAFE_RELEASE(mRenderTargetView);
-		SAFE_RELEASE(mDepthStencilView);
-		SAFE_RELEASE(mSwapChain);
-		SAFE_RELEASE(mDepthStencilBuffer);
+		ReleaseCOM(mRenderTargetView);
+		ReleaseCOM(mDepthStencilView);
+		ReleaseCOM(mSwapChain);
+		ReleaseCOM(mDepthStencilBuffer);
 
 		if (md3dImmediateContext)
 			md3dImmediateContext->ClearState();
 
-		SAFE_RELEASE(md3dImmediateContext);
-		SAFE_RELEASE(md3dDevice);
+		ReleaseCOM(md3dImmediateContext);
+		ReleaseCOM(md3dDevice);
 	}
 
 	int D3DProcessor::Run()
@@ -213,9 +214,9 @@ namespace common
 
 			dxgiFactory->CreateSwapChain(md3dDevice, &sd, &mSwapChain);
 
-			SAFE_RELEASE(dxgiDevice);
-			SAFE_RELEASE(dxgiAdapter);
-			SAFE_RELEASE(dxgiFactory);
+			ReleaseCOM(dxgiDevice);
+			ReleaseCOM(dxgiAdapter);
+			ReleaseCOM(dxgiFactory);
 
 			OnResize();
 		}
@@ -229,15 +230,15 @@ namespace common
 		assert(md3dDevice);
 		assert(mSwapChain);
 
-		SAFE_RELEASE(mRenderTargetView);
-		SAFE_RELEASE(mDepthStencilView); // 랜더링파이프라인에 텍스처를 연결하기 위한 인터페이스 클래스
-		SAFE_RELEASE(mDepthStencilBuffer); // 텍스처
+		ReleaseCOM(mRenderTargetView);
+		ReleaseCOM(mDepthStencilView); // 랜더링파이프라인에 텍스처를 연결하기 위한 인터페이스 클래스
+		ReleaseCOM(mDepthStencilBuffer); // 텍스처
 
 		mSwapChain->ResizeBuffers(1, mWidth, mHeight, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
 		ID3D11Texture2D* backBuffer;
 		mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
 		md3dDevice->CreateRenderTargetView(backBuffer, 0, &mRenderTargetView);
-		SAFE_RELEASE(backBuffer);
+		ReleaseCOM(backBuffer);
 
 		D3D11_TEXTURE2D_DESC depthStencilDesc;
 

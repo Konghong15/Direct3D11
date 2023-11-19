@@ -35,8 +35,6 @@ namespace common
 		inline float GetAspectRatio() const;
 		inline const WCHAR* GetTitle() const;
 
-		template <typename T>
-		void SAFE_RELEASE(T* ptr);
 		HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 
 	protected:
@@ -96,15 +94,5 @@ namespace common
 	float D3DProcessor::GetAspectRatio() const
 	{
 		return mWidth / static_cast<float>(mHeight);
-	}
-
-	template <typename T>
-	void D3DProcessor::SAFE_RELEASE(T* ptr)
-	{
-		if (ptr != nullptr)
-		{
-			ptr->Release();
-			ptr = nullptr;
-		}
 	}
 }

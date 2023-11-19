@@ -40,7 +40,7 @@ namespace common
 
 	struct Material
 	{
-		LightElement ReflectionIntesity; // specular의 마지막 성분을 지수로 사용함
+		LightElement ReflectionIntensity; // specular의 마지막 성분을 지수로 사용함
 		DirectX::SimpleMath::Vector4 Reflect;
 	};
 }

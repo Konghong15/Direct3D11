@@ -28,4 +28,28 @@ namespace common
 
 		return theta;
 	}
+
+	float MathHelper::RandF()
+	{
+		return (float)(rand()) / (float)RAND_MAX;
+	}
+
+	float MathHelper::RandF(float a, float b)
+	{
+		return a + RandF() * (b - a);
+	}
+
+	DirectX::SimpleMath::Matrix MathHelper::InverseTranspose(const DirectX::SimpleMath::Matrix& matrix)
+	{
+		DirectX::SimpleMath::Matrix result = matrix;
+		result._41 = 0.f;
+		result._42 = 0.f;
+		result._43 = 0.f;
+		result._44 = 1.f;
+
+		DirectX::SimpleMath::Matrix invResult;
+		result.Invert(invResult);
+
+		return invResult.Transpose();
+	}
 }

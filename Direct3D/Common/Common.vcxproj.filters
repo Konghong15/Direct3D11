@@ -58,8 +58,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="LightHelper.hlsl">
+    <FxCompile Include="..\Resource\Shader\LightHelper.hlsl">
       <Filter>쉐이더</Filter>
-    </Text>
+    </FxCompile>
   </ItemGroup>
 </Project>

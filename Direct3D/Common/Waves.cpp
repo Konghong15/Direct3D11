@@ -36,9 +36,13 @@ namespace common
 
 		mPrevSolution.clear();
 		mCurSolution.clear();
+		mNormals.clear();
+		mTangentX.clear();
 
 		mPrevSolution.resize(m * n);
 		mCurSolution.resize(m * n);
+		mNormals.resize(m * n);
+		mTangentX.resize(m * n);
 
 		float halfWidth = (n - 1) * dx * 0.5f;
 		float halfDepth = (m - 1) * dx * 0.5f;
@@ -53,6 +57,8 @@ namespace common
 
 				mPrevSolution[i * n + j] = { x, 0.0f, z };
 				mCurSolution[i * n + j] = { x, 0.0f, z };
+				mNormals[i * n + j] = { 0.f, 1.f, 0.f };
+				mTangentX[i * n + j] = { 1.f , 0.f, 0.f };
 			}
 		}
 	}
@@ -65,9 +71,9 @@ namespace common
 
 		if (t >= mTimeStep)
 		{
-			for (DWORD i = 1; i < mNumRows - 1; ++i)
+			for (UINT i = 1; i < mNumRows - 1; ++i)
 			{
-				for (DWORD j = 1; j < mNumCols - 1; ++j)
+				for (UINT j = 1; j < mNumCols - 1; ++j)
 				{
 					mPrevSolution[i * mNumCols + j].y =
 						mK1 * mPrevSolution[i * mNumCols + j].y +
@@ -82,6 +88,25 @@ namespace common
 			std::swap(mPrevSolution, mCurSolution);
 
 			t = 0.0f;
+
+			for (UINT i = 1; i < mNumRows - 1; ++i)
+			{
+				for (UINT j = 1; j < mNumCols - 1; ++j)
+				{
+					float l = mCurSolution[i * mNumCols + j - 1].y;
+					float r = mCurSolution[i * mNumCols + j + 1].y;
+					float t = mCurSolution[(i - 1) * mNumCols + j].y;
+					float b = mCurSolution[(i + 1) * mNumCols + j].y;
+
+					mNormals[i * mNumCols + j].x = -r + l;
+					mNormals[i * mNumCols + j].y = 2.0f * mSpatialStep;
+					mNormals[i * mNumCols + j].z = b - t;
+					mNormals[i * mNumCols + j].Normalize();
+
+					mTangentX[i * mNumCols + j] = { 2.0f * mSpatialStep, r - l, 0.0f };
+					mTangentX[i * mNumCols + j].Normalize();
+				}
+			}
 		}
 	}
 

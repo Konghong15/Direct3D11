@@ -1,16 +1,15 @@
-#pragma once
+﻿#pragma once
 
 #include "directxtk/SimpleMath.h"
 
+#include <cassert>
+
 #if defined(DEBUG) | defined(_DEBUG)
 #ifndef HR
-#define HR(x)                                              \
-	{                                                          \
-		HRESULT hr = (x);                                      \
-		if(FAILED(hr))                                         \
-		{                                                      \
-			DXTrace(__FILE__, (DWORD)__LINE__, hr, L#x, true); \
-		}                                                      \
+#define HR(x)                                               \
+	{                                                       \
+		HRESULT hr = (x);                                   \
+		assert(SUCCEEDED(hr));								\
 	}
 #endif
 
