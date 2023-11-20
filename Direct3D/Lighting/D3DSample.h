@@ -9,10 +9,10 @@
 #include "GeometryGenerator.h"
 #include "Waves.h"
 
-
 namespace lighting
 {
 	using namespace common;
+	using namespace DirectX::SimpleMath;
 
 	struct Vertex
 	{
@@ -35,6 +35,14 @@ namespace lighting
 		SpotLight SpotLight;
 		DirectX::SimpleMath::Vector3 EyePosW;
 		float unused;
+	};
+
+	struct Model
+	{
+		ID3D11Buffer* VertexBuffer;
+		ID3D11Buffer* IndexBuffer;
+		Material Material;
+		UINT IndexCount;
 	};
 
 	enum class eShapeType
@@ -61,6 +69,9 @@ namespace lighting
 		void OnMouseMove(WPARAM btnState, int x, int y);
 
 	private:
+		void releaseModel(Model* model);
+
+		void drawModel(const Model& model, const Matrix& worldMatrix = Matrix::Identity);
 		void drawObject(ID3D11Buffer* vertexBuffer, ID3D11Buffer* indexBuffer, UINT indexSize, const Material& material, const DirectX::SimpleMath::Matrix& worldMatrix = DirectX::SimpleMath::Matrix::Identity);
 		void drawShape(eShapeType shapeType, const DirectX::SimpleMath::Matrix& worldMatrix = DirectX::SimpleMath::Matrix::Identity);
 
@@ -72,6 +83,7 @@ namespace lighting
 		void buildWaves();
 		void buildShape();
 		void buildSkull();
+		void buildConstantBuffer();
 		void buildShader();
 		void buildVertexLayout();
 
@@ -81,17 +93,15 @@ namespace lighting
 		CBPerObject mCBPerObject;
 		CBPerFrame mCBPerFrame;
 
-		ID3D11Buffer* mLandVB;
-		ID3D11Buffer* mLandIB;
-		UINT mLandIndexCount;
-		Material mLandMaterial;
-		DirectX::SimpleMath::Matrix mLandWorld;
-
-		ID3D11Buffer* mWavesVB;
-		ID3D11Buffer* mWavesIB;
-		Material mWavesMaterial;
 		Waves mWaves;
+
+		Model mLandModel;
+		Model mWavesModel;
+		Model mSkullModel;
+
+		DirectX::SimpleMath::Matrix mLandWorld;
 		DirectX::SimpleMath::Matrix mWaveWorld;
+		DirectX::SimpleMath::Matrix mSkullWorld;
 
 		std::vector<UINT> mVertexOffsets;
 		std::vector<UINT> mIndexOffsets;
@@ -100,12 +110,6 @@ namespace lighting
 		std::map<eShapeType, Material> mShapeMaterials;
 		ID3D11Buffer* mShapeVB;
 		ID3D11Buffer* mShapeIB;
-
-		ID3D11Buffer* mSkullVB;
-		ID3D11Buffer* mSkullIB;
-		Material mSkullMaterial;
-		DirectX::SimpleMath::Matrix mSkullWorld;
-		UINT mSkullIndexCount;
 
 		DirectionLight mDirLight;
 		PointLight mPointLight;

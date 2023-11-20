@@ -54,7 +54,7 @@ float4 main(PS_INPUT pin) : SV_Target
 
 	// 일반적으로 diffuse 재질에서 알파를 가져온다고 함
 	float4 litColor = ambient + diffuse + specular;
-	litColor.a = gMaterial.ReflectionIntesity.Diffuse.a;
+	litColor.a = gMaterial.Diffuse.a;
 
 	return litColor;
 }

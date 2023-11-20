@@ -1,20 +1,18 @@
-struct LightElement
+
+struct DirectionLight
 {
 	float4 Ambient;
 	float4 Diffuse;
 	float4 Specular;
-};
-
-struct DirectionLight
-{
-	LightElement Intensity;
 	float3 Direction;
 	float pad;
 };
 
 struct PointLight
 {
-	LightElement Intensity;
+	float4 Ambient;
+	float4 Diffuse;
+	float4 Specular;
 	float3 Position;
 	float Range;
 	float3 AttenuationParam;
@@ -23,7 +21,9 @@ struct PointLight
 
 struct SpotLight
 {
-	LightElement Intensity;
+	float4 Ambient;
+	float4 Diffuse;
+	float4 Specular;
 	float3 Direction;
 	float Spot;
 	float3 Position;
@@ -34,7 +34,9 @@ struct SpotLight
 
 struct Material
 {
-	LightElement ReflectionIntesity; // specular w = specular power
+	float4 Ambient;
+	float4 Diffuse;
+	float4 Specular; // specular w = specular power
 	float4 Reflect;
 };
 
@@ -51,7 +53,7 @@ void ComputeDirectionLight(Material material
 	specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
 	// 간접광
-	ambient = material.ReflectionIntesity.Ambient * directionLight.Intensity.Ambient;
+	ambient = material.Ambient * directionLight.Ambient;
 
 	// 난반사광
 	float ndotl = dot(normal, -directionLight.Direction);
@@ -61,12 +63,12 @@ void ComputeDirectionLight(Material material
 		return;
 	}
 
-	diffuse = material.ReflectionIntesity.Diffuse * directionLight.Intensity.Diffuse * ndotl;
+	diffuse = material.Diffuse * directionLight.Diffuse * ndotl;
 
 	// 정반사광
 	float3 r = reflect(directionLight.Direction, normal);
 	float rdotv = dot(r, normalize(toEye));
-	specular = material.ReflectionIntesity.Specular * directionLight.Intensity.Specular * pow(max(rdotv, 0.0f), directionLight.Intensity.Specular.w);
+	specular = material.Specular * directionLight.Specular * pow(max(rdotv, 0.0f), directionLight.Specular.w);
 }
 
 void ComputePointLight(Material material
@@ -91,7 +93,7 @@ void ComputePointLight(Material material
 	}
 
 	// 주변광
-	ambient = material.ReflectionIntesity.Ambient * pointLight.Intensity.Ambient;
+	ambient = material.Ambient * pointLight.Ambient;
 
 	// 난반사광
 	lightDirection /= distance;
@@ -102,12 +104,12 @@ void ComputePointLight(Material material
 		return;
 	}
 
-	diffuse = material.ReflectionIntesity.Diffuse * pointLight.Intensity.Diffuse * ndotl;
+	diffuse = material.Diffuse * pointLight.Diffuse * ndotl;
 
 	// 정반사광
 	float3 r = reflect(lightDirection, normal);
 	float rdotv = dot(r, normalize(toEye));
-	specular = material.ReflectionIntesity.Specular * pointLight.Intensity.Specular * pow(max(rdotv, 0.0f), pointLight.Intensity.Specular.w);
+	specular = material.Specular * pointLight.Specular * pow(max(rdotv, 0.0f), pointLight.Specular.w);
 
 	// 감쇠율
 	float invAttenuationRate = 1 / dot(pointLight.AttenuationParam, float3(1.0f, distance, distance * distance));
@@ -137,7 +139,7 @@ void ComputeSpotLight(Material material
 	}
 
 	// 주변광
-	ambient = material.ReflectionIntesity.Ambient * spotLight.Intensity.Ambient;
+	ambient = material.Ambient * spotLight.Ambient;
 
 	// 난반사광
 	lightDirection /= distance;
@@ -148,12 +150,12 @@ void ComputeSpotLight(Material material
 		return;
 	}
 
-	diffuse = material.ReflectionIntesity.Diffuse * spotLight.Intensity.Diffuse * ndotl;
+	diffuse = material.Diffuse * spotLight.Diffuse * ndotl;
 
 	// 정반사광
 	float3 r = reflect(lightDirection, normal);
 	float rdotv = dot(r, normalize(toEye));
-	specular = material.ReflectionIntesity.Specular * spotLight.Intensity.Specular * pow(max(rdotv, 0.0f), spotLight.Intensity.Specular.w); // max를 취해줘야 올바른 값이 나온다.
+	specular = material.Specular * spotLight.Specular * pow(max(rdotv, 0.0f), spotLight.Specular.w); // max를 취해줘야 올바른 값이 나온다.
 
 	// 중심의 거리와 지수에 따른 범위 제어
 	float spot = pow(max(dot(lightDirection, spotLight.Direction), 0.0f), spotLight.Spot);

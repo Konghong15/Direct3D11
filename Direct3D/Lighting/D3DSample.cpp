@@ -21,70 +21,88 @@ namespace lighting
 	{
 		using namespace DirectX::SimpleMath;
 
-		mWaveWorld = Matrix::CreateTranslation(0.f, -3.f, 0.f);
+		mWaveWorld = Matrix::CreateTranslation(0.f, 3.f, 0.f);
 
 		// Directional light.
-		mDirLight.Intensity.Ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
-		mDirLight.Intensity.Diffuse = { 0.5f, 0.5f, 0.5f, 1.0f };
-		mDirLight.Intensity.Specular = { 0.5f, 0.5f, 0.5f, 1.0f };
+		mDirLight.Ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
+		mDirLight.Diffuse = { 0.5f, 0.5f, 0.5f, 1.0f };
+		mDirLight.Specular = { 0.5f, 0.5f, 0.5f, 1.0f };
 		mDirLight.Direction = { 0.57735f, -0.57735f, 0.57735f };
 
 		// Point light--position is changed every frame to animate in UpdateScene function.
-		mPointLight.Intensity.Ambient = { 0.3f, 0.3f, 0.3f, 1.0f };
-		mPointLight.Intensity.Diffuse = { 0.7f, 0.7f, 0.7f, 1.0f };
-		mPointLight.Intensity.Specular = { 0.7f, 0.7f, 0.7f, 1.0f };
+		mPointLight.Ambient = { 0.3f, 0.3f, 0.3f, 1.0f };
+		mPointLight.Diffuse = { 0.7f, 0.7f, 0.7f, 1.0f };
+		mPointLight.Specular = { 0.7f, 0.7f, 0.7f, 1.0f };
 		mPointLight.AttenuationParam = { 0.0f, 0.1f, 0.0f };
 		mPointLight.Range = 100.0f;
 
 		// Spot light--position and direction changed every frame to animate in UpdateScene function.
-		mSpotLight.Intensity.Ambient = { 0.0f, 0.0f, 0.0f, 1.0f };
-		mSpotLight.Intensity.Diffuse = { 1.0f, 1.0f, 0.0f, 1.0f };
-		mSpotLight.Intensity.Specular = { 1.0f, 1.0f, 1.0f, 1.0f };
+		mSpotLight.Ambient = { 0.0f, 0.0f, 0.0f, 1.0f };
+		mSpotLight.Diffuse = { 1.0f, 1.0f, 0.0f, 1.0f };
+		mSpotLight.Specular = { 1.0f, 1.0f, 1.0f, 1.0f };
 		mSpotLight.AttenuationParam = { 1.0f, 0.0f, 0.0f };
 		mSpotLight.Spot = 96.0f;
 		mSpotLight.Range = 10000.0f;
 
-		mLandMaterial.ReflectionIntensity.Ambient = { 0.48f, 0.77f, 0.46f, 1.0f };
-		mLandMaterial.ReflectionIntensity.Diffuse = { 0.48f, 0.77f, 0.46f, 1.0f };
-		mLandMaterial.ReflectionIntensity.Specular = { 0.2f, 0.2f, 0.2f, 16.0f };
+		mLandModel.Material.Ambient = { 0.48f, 0.77f, 0.46f, 1.0f };
+		mLandModel.Material.Diffuse = { 0.48f, 0.77f, 0.46f, 1.0f };
+		mLandModel.Material.Specular = { 0.2f, 0.2f, 0.2f, 16.0f };
 
-		mWavesMaterial.ReflectionIntensity.Ambient = { 0.137f, 0.42f, 0.556f, 1.0f };
-		mWavesMaterial.ReflectionIntensity.Diffuse = { 0.137f, 0.42f, 0.556f, 1.0f };
-		mWavesMaterial.ReflectionIntensity.Specular = { 0.8f, 0.8f, 0.8f, 96.0f };
+		mWavesModel.Material.Ambient = { 0.137f, 0.42f, 0.556f, 1.0f };
+		mWavesModel.Material.Diffuse = { 0.137f, 0.42f, 0.556f, 1.0f };
+		mWavesModel.Material.Specular = { 0.8f, 0.8f, 0.8f, 96.0f };
 
 		Material material;
-		material.ReflectionIntensity.Ambient = { 0.651f, 0.5f, 0.392f, 1.0f };
-		material.ReflectionIntensity.Diffuse = { 0.651f, 0.5f, 0.392f, 1.0f };
-		material.ReflectionIntensity.Specular = { 0.2f, 0.2f, 0.2f, 16.0f };
+		material.Ambient = { 0.651f, 0.5f, 0.392f, 1.0f };
+		material.Diffuse = { 0.651f, 0.5f, 0.392f, 1.0f };
+		material.Specular = { 0.2f, 0.2f, 0.2f, 16.0f };
 		mShapeMaterials.insert({ eShapeType::Box, material });
 
-		material.ReflectionIntensity.Ambient = { 0.7f, 0.85f, 0.7f, 1.0f };
-		material.ReflectionIntensity.Diffuse = { 0.7f, 0.85f, 0.7f, 1.0f };
-		material.ReflectionIntensity.Specular = { 0.8f, 0.8f, 0.8f, 16.0f };
+		material.Ambient = { 0.7f, 0.85f, 0.7f, 1.0f };
+		material.Diffuse = { 0.7f, 0.85f, 0.7f, 1.0f };
+		material.Specular = { 0.8f, 0.8f, 0.8f, 16.0f };
 		mShapeMaterials.insert({ eShapeType::Cyliner, material });
 
-		material.ReflectionIntensity.Ambient = { 0.48f, 0.77f, 0.46f, 1.0f };
-		material.ReflectionIntensity.Diffuse = { 0.48f, 0.77f, 0.46f, 1.0f };
-		material.ReflectionIntensity.Specular = { 0.2f, 0.2f, 0.2f, 16.0f };
+		material.Ambient = { 0.48f, 0.77f, 0.46f, 1.0f };
+		material.Diffuse = { 0.48f, 0.77f, 0.46f, 1.0f };
+		material.Specular = { 0.2f, 0.2f, 0.2f, 16.0f };
 		mShapeMaterials.insert({ eShapeType::Grid, material });
 
-		material.ReflectionIntensity.Ambient = { 0.1f, 0.2f, 0.3f, 1.0f };
-		material.ReflectionIntensity.Diffuse = { 0.2f, 0.4f, 0.6f, 1.0f };
-		material.ReflectionIntensity.Specular = { 0.9f, 0.9f, 0.9f, 16.0f };
+		material.Ambient = { 0.1f, 0.2f, 0.3f, 1.0f };
+		material.Diffuse = { 0.2f, 0.4f, 0.6f, 1.0f };
+		material.Specular = { 0.9f, 0.9f, 0.9f, 16.0f };
 		mShapeMaterials.insert({ eShapeType::Sphere, material });
 
-		mSkullMaterial.ReflectionIntensity.Ambient = { 0.8f, 0.8f, 0.8f, 1.0f };
-		mSkullMaterial.ReflectionIntensity.Diffuse = { 0.8f, 0.8f, 0.8f, 1.0f };
-		mSkullMaterial.ReflectionIntensity.Specular = { 0.8f, 0.8f, 0.8f, 16.0f };
+		mSkullModel.Material.Ambient = { 0.8f, 0.8f, 0.8f, 1.0f };
+		mSkullModel.Material.Diffuse = { 0.8f, 0.8f, 0.8f, 1.0f };
+		mSkullModel.Material.Specular = { 0.8f, 0.8f, 0.8f, 16.0f };
 
 	}
 
 	D3DSample::~D3DSample()
 	{
+		ReleaseCOM(mPerObjectCB);
+		ReleaseCOM(mPerFrameCB);
+
+		releaseModel(&mLandModel);
+		releaseModel(&mWavesModel);
+		releaseModel(&mSkullModel);
+
+		ReleaseCOM(mShapeVB);
+		ReleaseCOM(mShapeIB);
+
 		ReleaseCOM(mVertexShader);
 		ReleaseCOM(mVertexShaderBuffer);
 		ReleaseCOM(mPixelShader);
 		ReleaseCOM(mInputLayout);
+	}
+
+	void D3DSample::releaseModel(Model* model)
+	{
+		assert(model != nullptr);
+
+		ReleaseCOM(model->VertexBuffer);
+		ReleaseCOM(model->IndexBuffer);
 	}
 
 	bool D3DSample::Init()
@@ -138,7 +156,7 @@ namespace lighting
 		mWaves.Update(deltaTime);
 
 		D3D11_MAPPED_SUBRESOURCE mappedData;
-		HR(md3dImmediateContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+		HR(md3dImmediateContext->Map(mWavesModel.VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
 
 		Vertex* vertices = reinterpret_cast<Vertex*>(mappedData.pData);
 		for (UINT i = 0; i < mWaves.GetVertexCount(); ++i)
@@ -147,7 +165,7 @@ namespace lighting
 			vertices[i].Normal = mWaves.GetNormal(i);
 		}
 
-		md3dImmediateContext->Unmap(mWavesVB, 0);
+		md3dImmediateContext->Unmap(mWavesModel.VertexBuffer, 0);
 
 		// Circle light over the land surface.
 		mPointLight.Position.x = 70.0f * cosf(0.2f * mTimer.GetTotalTime());
@@ -187,9 +205,9 @@ namespace lighting
 			md3dImmediateContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
 		}
 
-		drawObject(mSkullVB, mSkullIB, mSkullIndexCount, mSkullMaterial, mSkullWorld);
-		drawObject(mWavesVB, mWavesIB, 3 * mWaves.GetTriangleCount(), mWavesMaterial, mWaveWorld);
-		drawObject(mLandVB, mLandIB, mLandIndexCount, mLandMaterial, mLandWorld);
+		drawModel(mSkullModel, mSkullWorld);
+		drawModel(mWavesModel, mWaveWorld);
+		drawModel(mLandModel, mLandWorld);
 
 		for (const std::pair<eShapeType, DirectX::SimpleMath::Matrix>& pair : mWorldMatrixs)
 		{
@@ -242,6 +260,30 @@ namespace lighting
 
 		mLastMousePos.x = x;
 		mLastMousePos.y = y;
+	}
+
+	void D3DSample::drawModel(const Model& model, const Matrix& worldMatrix)
+	{
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &model.VertexBuffer, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(model.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		mCBPerObject.World = worldMatrix;
+		mCBPerObject.WorldInvTranspose = MathHelper::InverseTranspose(worldMatrix);
+		mCBPerObject.WorldViewProj = worldMatrix * mView * mProj;
+		mCBPerObject.Material = model.Material;
+
+		mCBPerObject.World = mCBPerObject.World.Transpose();
+		mCBPerObject.WorldInvTranspose = mCBPerObject.WorldInvTranspose.Transpose();
+		mCBPerObject.WorldViewProj = mCBPerObject.WorldViewProj.Transpose();
+
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+
+		md3dImmediateContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
+		md3dImmediateContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
+
+		md3dImmediateContext->DrawIndexed(model.IndexCount, 0, 0);
 	}
 
 	void D3DSample::drawObject(ID3D11Buffer* vertexBuffer, ID3D11Buffer* indexBuffer, UINT indexSize, const Material& material, const DirectX::SimpleMath::Matrix& worldMatrix)
@@ -321,6 +363,7 @@ namespace lighting
 		buildWaves();
 		buildShape();
 		buildSkull();
+		buildConstantBuffer();
 	}
 
 	void D3DSample::buildLand()
@@ -328,7 +371,7 @@ namespace lighting
 		GeometryGenerator::MeshData grid;
 		GeometryGenerator::CreateGrid(160.f, 160.f, 50, 50, &grid);
 
-		mLandIndexCount = grid.Indices.size();
+		mLandModel.IndexCount = grid.Indices.size();
 
 		std::vector<Vertex> vertices(grid.Vertices.size());
 		for (size_t i = 0; i < grid.Vertices.size(); ++i)
@@ -347,17 +390,17 @@ namespace lighting
 		vbd.MiscFlags = 0;
 		D3D11_SUBRESOURCE_DATA vInitData;
 		vInitData.pSysMem = &vertices[0];
-		HR(md3dDevice->CreateBuffer(&vbd, &vInitData, &mLandVB));
+		HR(md3dDevice->CreateBuffer(&vbd, &vInitData, &mLandModel.VertexBuffer));
 
 		D3D11_BUFFER_DESC ibd;
 		ibd.Usage = D3D11_USAGE_IMMUTABLE;
-		ibd.ByteWidth = sizeof(UINT) * mLandIndexCount;
+		ibd.ByteWidth = sizeof(UINT) * mLandModel.IndexCount;
 		ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		ibd.CPUAccessFlags = 0;
 		ibd.MiscFlags = 0;
 		D3D11_SUBRESOURCE_DATA iinitData;
 		iinitData.pSysMem = &grid.Indices[0];
-		HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mLandIB));
+		HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mLandModel.IndexBuffer));
 
 	}
 	void D3DSample::buildWaves()
@@ -370,7 +413,7 @@ namespace lighting
 		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		vbd.MiscFlags = 0;
-		HR(md3dDevice->CreateBuffer(&vbd, 0, &mWavesVB));
+		HR(md3dDevice->CreateBuffer(&vbd, 0, &mWavesModel.VertexBuffer));
 		std::vector<UINT> indices(3 * mWaves.GetTriangleCount());
 
 		UINT m = mWaves.GetRowCount();
@@ -400,21 +443,11 @@ namespace lighting
 		ibd.MiscFlags = 0;
 		D3D11_SUBRESOURCE_DATA iinitData;
 		iinitData.pSysMem = &indices[0];
-		HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mWavesIB));
+		HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mWavesModel.IndexBuffer));
 
-		D3D11_BUFFER_DESC cbd;
-		cbd.Usage = D3D11_USAGE_DEFAULT;
-		static_assert(sizeof(CBPerObject) % 16 == 0, "must be align");
-		cbd.ByteWidth = sizeof(CBPerObject);
-		cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		cbd.CPUAccessFlags = 0;
-		cbd.MiscFlags = 0;
-		HR(md3dDevice->CreateBuffer(&cbd, NULL, &mPerObjectCB));
-
-		static_assert(sizeof(CBPerFrame) % 16 == 0, "must be align");
-		cbd.ByteWidth = sizeof(CBPerFrame);
-		HR(md3dDevice->CreateBuffer(&cbd, NULL, &mPerFrameCB));
+		mWavesModel.IndexCount = indices.size();
 	}
+
 	void D3DSample::buildShape()
 	{
 		GeometryGenerator::MeshData box;
@@ -459,16 +492,16 @@ namespace lighting
 		vertices.reserve(totalVertexCount);
 
 		auto pushBack = [&vertices](const GeometryGenerator::MeshData& meshData)
-		{
-			for (const GeometryGenerator::Vertex& geoVertex : meshData.Vertices)
 			{
-				Vertex vertex;
-				vertex.Position = geoVertex.Position;
-				vertex.Normal = geoVertex.Normal;
+				for (const GeometryGenerator::Vertex& geoVertex : meshData.Vertices)
+				{
+					Vertex vertex;
+					vertex.Position = geoVertex.Position;
+					vertex.Normal = geoVertex.Normal;
 
-				vertices.push_back(vertex);
-			}
-		};
+					vertices.push_back(vertex);
+				}
+			};
 
 		pushBack(box);
 		pushBack(grid);
@@ -516,6 +549,7 @@ namespace lighting
 			mWorldMatrixs.push_back({ eShapeType::Sphere, Matrix::CreateTranslation(+5.0f, 3.5f, -10.0f + i * 5.0f) });
 		}
 	}
+
 	void D3DSample::buildSkull()
 	{
 		std::ifstream fin("../Resource/Models/skull.txt");
@@ -547,8 +581,8 @@ namespace lighting
 		fin >> ignore;
 		fin >> ignore;
 
-		mSkullIndexCount = 3 * tcount;
-		std::vector<UINT> indices(mSkullIndexCount);
+		mSkullModel.IndexCount = 3 * tcount;
+		std::vector<UINT> indices(mSkullModel.IndexCount);
 		for (UINT i = 0; i < tcount; ++i)
 		{
 			fin >> indices[i * 3 + 0] >> indices[i * 3 + 1] >> indices[i * 3 + 2];
@@ -564,7 +598,7 @@ namespace lighting
 		vbd.MiscFlags = 0;
 		D3D11_SUBRESOURCE_DATA vinitData;
 		vinitData.pSysMem = &vertices[0];
-		HR(md3dDevice->CreateBuffer(&vbd, &vinitData, &mSkullVB));
+		HR(md3dDevice->CreateBuffer(&vbd, &vinitData, &mSkullModel.VertexBuffer));
 
 		//
 		// Pack the indices of all the meshes into one index buffer.
@@ -572,17 +606,33 @@ namespace lighting
 
 		D3D11_BUFFER_DESC ibd;
 		ibd.Usage = D3D11_USAGE_IMMUTABLE;
-		ibd.ByteWidth = sizeof(UINT) * mSkullIndexCount;
+		ibd.ByteWidth = sizeof(UINT) * mSkullModel.IndexCount;
 		ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		ibd.CPUAccessFlags = 0;
 		ibd.MiscFlags = 0;
 		D3D11_SUBRESOURCE_DATA iinitData;
 		iinitData.pSysMem = &indices[0];
-		HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mSkullIB));
+		HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mSkullModel.IndexBuffer));
 
 		using namespace DirectX::SimpleMath;
 
 		mSkullWorld = Matrix::CreateScale(0.5f, 0.5f, 0.5f) * Matrix::CreateTranslation(0.f, 1.f, 0.f);
+	}
+
+	void D3DSample::buildConstantBuffer()
+	{
+		D3D11_BUFFER_DESC cbd;
+		cbd.Usage = D3D11_USAGE_DEFAULT;
+		static_assert(sizeof(CBPerObject) % 16 == 0, "must be align");
+		cbd.ByteWidth = sizeof(CBPerObject);
+		cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cbd.CPUAccessFlags = 0;
+		cbd.MiscFlags = 0;
+		HR(md3dDevice->CreateBuffer(&cbd, NULL, &mPerObjectCB));
+
+		static_assert(sizeof(CBPerFrame) % 16 == 0, "must be align");
+		cbd.ByteWidth = sizeof(CBPerFrame);
+		HR(md3dDevice->CreateBuffer(&cbd, NULL, &mPerFrameCB));
 	}
 
 	void D3DSample::buildShader()

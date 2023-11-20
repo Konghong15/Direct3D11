@@ -418,16 +418,16 @@ namespace drawing
 		vertices.reserve(totalVertexCount);
 
 		auto pushBack = [&vertices](const GeometryGenerator::MeshData& meshData)
-		{
-			for (const GeometryGenerator::Vertex& geoVertex : meshData.Vertices)
 			{
-				Vertex vertex;
-				vertex.Position = geoVertex.Position;
-				vertex.Color = common::Black;
+				for (const GeometryGenerator::Vertex& geoVertex : meshData.Vertices)
+				{
+					Vertex vertex;
+					vertex.Position = geoVertex.Position;
+					vertex.Color = common::Black;
 
-				vertices.push_back(vertex);
-			}
-		};
+					vertices.push_back(vertex);
+				}
+			};
 
 		pushBack(box);
 		pushBack(grid);
@@ -478,7 +478,7 @@ namespace drawing
 
 	void D3DSample::buildSkull()
 	{
-		std::ifstream fin("Models/skull.txt");
+		std::ifstream fin("../Resource/Models/skull.txt");
 
 		if (!fin)
 		{

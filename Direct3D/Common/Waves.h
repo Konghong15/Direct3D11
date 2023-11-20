@@ -22,6 +22,8 @@ namespace common
 		inline UINT GetColumnCount() const;
 		inline UINT GetRowCount() const;
 		inline const DirectX::SimpleMath::Vector3& GetNormal(size_t index) const;
+		inline float GetWidth() const;
+		inline float GetDepth() const;
 
 	private:
 		UINT mNumRows;
@@ -68,5 +70,13 @@ namespace common
 	{
 		assert(index < mNormals.size());
 		return mNormals[index];
+	}
+	float Waves::GetWidth() const
+	{
+		return mNumCols * mSpatialStep;
+	}
+	float Waves::GetDepth() const
+	{
+		return mNumRows * mSpatialStep;
 	}
 }
