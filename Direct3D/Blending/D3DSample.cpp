@@ -179,23 +179,28 @@ namespace blending
 
 		memcpy(mCBPerFrame.DirLight, mDirLights, sizeof(mCBPerFrame.DirLight));
 		mCBPerFrame.EyePosW = mEyePosW;
-		mCBPerFrame.FogStart = 15.f;
+		mCBPerFrame.FogStart = 25.f;
 		mCBPerFrame.FogRange = 175.f;
-		mCBPerFrame.FogColor = common::Silver;
+		mCBPerFrame.FogColor = common::Black;
 
 		md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
 
 		Object object;
+		float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-		object = { mWavesVB, mWavesIB, mWaves.GetTriangleCount() * 3, mWavesMapSRV, &mWavesWorld, &mWaterTexTransform, &mWavesMat };
+		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
+		Matrix identity = Matrix::Identity;
+		object = { mBoxVB, mBoxIB, mBoxIndexCount, mBoxMapSRV, &mBoxWorld, &identity, &mBoxMat };
 		drawObject(object);
+		md3dImmediateContext->RSSetState(NULL);
 
 		object = { mLandVB, mLandIB, mLandIndexCount, mGrassMapSRV, &mLandWorld, &mGrassTexTransform, &mLandMat };
 		drawObject(object);
 
-		Matrix identity = Matrix::Identity;
-		object = { mBoxVB, mBoxIB, mBoxIndexCount, mBoxMapSRV, &mBoxWorld, &identity, &mBoxMat };
+		md3dImmediateContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
+		object = { mWavesVB, mWavesIB, mWaves.GetTriangleCount() * 3, mWavesMapSRV, &mWavesWorld, &mWaterTexTransform, &mWavesMat };
 		drawObject(object);
+		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 
 		mSwapChain->Present(0, 0);
 	}
