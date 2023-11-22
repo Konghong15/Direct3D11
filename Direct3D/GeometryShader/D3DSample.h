@@ -6,16 +6,16 @@
 #include "D3DUtil.h"
 #include "MathHelper.h"
 #include "LightHelper.h"
+#include "Waves.h"
 
-namespace stenciling
+namespace vertex
 {
-	using namespace common;
 	using namespace DirectX::SimpleMath;
 
-	struct Vertex
+	struct Basic32
 	{
-		Vertex() = default;
-		Vertex(float px, float py, float pz, float nx, float ny, float nz, float tx, float ty)
+		Basic32() = default;
+		Basic32(float px, float py, float pz, float nx, float ny, float nz, float tx, float ty)
 			: Pos(px, py, pz)
 			, Normal(nx, ny, nz)
 			, Tex(tx, ty)
@@ -26,6 +26,19 @@ namespace stenciling
 		Vector3 Normal;
 		Vector2 Tex;
 	};
+
+	struct Sprite
+	{
+		Vector3 Pos;
+		Vector2 Size;
+	};
+}
+
+namespace geometryShader
+{
+	using namespace common;
+	using namespace DirectX;
+	using namespace SimpleMath;
 
 	struct CBPerObject
 	{
@@ -63,15 +76,20 @@ namespace stenciling
 		void OnMouseUp(WPARAM btnState, int x, int y);
 		void OnMouseMove(WPARAM btnState, int x, int y);
 
-	private:
+	public:
 		void updateCBPerObject(const Matrix& worldMat, const Matrix& TexMat, const Material& material);
 
 		void buildConstantBuffer();
 		void buildShader();
 		void buildInputLayout();
 
-		void buildRoomGeometryBuffers();
-		void buildSkullGeometryBuffers();
+		float getHillHeight(float x, float z) const;
+		Vector3 getHillNormal(float x, float z) const;
+		void buildLandGeometryBuffers();
+		void buildWaveGeometryBuffers();
+		void buildCrateGeometryBuffers();
+		void buildTreeSpritesBuffer();
+		void drawTreeSprites(Matrix viewProj);
 
 	private:
 		CBPerObject mCBPerObject;
@@ -81,36 +99,54 @@ namespace stenciling
 
 		ID3D11VertexShader* mVertexShader;
 		ID3DBlob* mVertexShaderBlob;
+		ID3D11GeometryShader* mGeometryShader;
 		ID3D11PixelShader* mPixelShader;
-		ID3D11InputLayout* mInputLayout;
+		ID3D11InputLayout* mInputLayoutBasic32;
+		ID3D11InputLayout* mInputLayoutSprite;
 
 		ID3D11SamplerState* mLinearSampler;
 
-		ID3D11Buffer* mRoomVB;
+		ID3D11Buffer* mLandVB;
+		ID3D11Buffer* mLandIB;
 
-		ID3D11Buffer* mSkullVB;
-		ID3D11Buffer* mSkullIB;
+		ID3D11Buffer* mWavesVB;
+		ID3D11Buffer* mWavesIB;
 
-		ID3D11ShaderResourceView* mFloorDiffuseMapSRV;
-		ID3D11ShaderResourceView* mWallDiffuseMapSRV;
-		ID3D11ShaderResourceView* mMirrorDiffuseMapSRV;
+		ID3D11Buffer* mBoxVB;
+		ID3D11Buffer* mBoxIB;
+
+		ID3D11Buffer* mTreeSpritesVB;
+
+		ID3D11ShaderResourceView* mGrassMapSRV;
+		ID3D11ShaderResourceView* mWavesMapSRV;
+		ID3D11ShaderResourceView* mBoxMapSRV;
+		ID3D11ShaderResourceView* mTreeTextureMapArraySRV;
+
+		Waves mWaves;
 
 		DirectionLight mDirLights[3];
-		Material mRoomMat;
-		Material mSkullMat;
-		Material mMirrorMat;
-		Material mShadowMat;
+		Material mLandMat;
+		Material mWavesMat;
+		Material mBoxMat;
+		Material mTreeMat;
 
-		Matrix mRoomWorld;
-		Matrix mSkullWorld;
-
-		UINT mSkullIndexCount;
-		Vector3 mSkullTranslation;
-
+		Matrix mGrassTexTransform;
+		Matrix mWaterTexTransform;
+		Matrix mLandWorld;
+		Matrix mWavesWorld;
+		Matrix mBoxWorld;
 		Matrix mView;
 		Matrix mProj;
 
-		Vector3 mEyePosW; // 시점 의존적인 조명 처리를 위해서
+		UINT mLandIndexCount;
+
+		static const UINT TreeCount = 16;
+
+		bool mAlphaToCoverageOn;
+
+		Vector2 mWaterTexOffset;
+
+		Vector3 mEyePosW;
 
 		float mTheta;
 		float mPhi;

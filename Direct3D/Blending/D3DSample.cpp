@@ -62,6 +62,28 @@ namespace blending
 
 	D3DSample::~D3DSample()
 	{
+		ReleaseCOM(mPerObjectCB);
+		ReleaseCOM(mPerFrameCB);
+
+		ReleaseCOM(mLandVB);
+		ReleaseCOM(mLandIB);
+
+		ReleaseCOM(mWavesVB);
+		ReleaseCOM(mWavesIB);
+
+		ReleaseCOM(mBoxVB);
+		ReleaseCOM(mBoxIB);
+
+		ReleaseCOM(mGrassMapSRV);
+		ReleaseCOM(mWavesMapSRV);
+		ReleaseCOM(mBoxMapSRV);
+		ReleaseCOM(mLinearSampleState);
+
+		ReleaseCOM(mVertexShader);
+		ReleaseCOM(mVertexShaderBuffer);
+		ReleaseCOM(mPixelShader);
+		ReleaseCOM(mInputLayout);
+
 		RenderStates::Destroy();
 	}
 
@@ -181,7 +203,7 @@ namespace blending
 		mCBPerFrame.EyePosW = mEyePosW;
 		mCBPerFrame.FogStart = 25.f;
 		mCBPerFrame.FogRange = 175.f;
-		mCBPerFrame.FogColor = common::Black;
+		mCBPerFrame.FogColor = common::Silver;
 
 		md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
 
