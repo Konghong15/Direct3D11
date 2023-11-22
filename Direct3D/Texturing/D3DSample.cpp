@@ -137,7 +137,7 @@ namespace texturing
 		mWaves.Update(deltaTime);
 
 		D3D11_MAPPED_SUBRESOURCE mappedData;
-		HR(md3dImmediateContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+		HR(md3dContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
 
 		Vertex* v = reinterpret_cast<Vertex*>(mappedData.pData);
 		for (UINT i = 0; i < mWaves.GetVertexCount(); ++i)
@@ -150,7 +150,7 @@ namespace texturing
 			v[i].Tex.y = 0.5f - mWaves[i].z / mWaves.GetDepth();
 		}
 
-		md3dImmediateContext->Unmap(mWavesVB, 0);
+		md3dContext->Unmap(mWavesVB, 0);
 
 		mWaterTexOffset.y += 0.5f * deltaTime;
 		mWaterTexOffset.x += 1.f * deltaTime;
@@ -159,31 +159,31 @@ namespace texturing
 
 	void D3DSample::Render()
 	{
-		assert(md3dImmediateContext);
+		assert(md3dContext);
 		assert(mSwapChain);
 
 		float color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
 
-		md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, color);
-		md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
+		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		md3dImmediateContext->IASetInputLayout(mInputLayout);
+		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		md3dContext->IASetInputLayout(mInputLayout);
 
-		md3dImmediateContext->VSSetShader(mVertexShader, NULL, 0);
+		md3dContext->VSSetShader(mVertexShader, NULL, 0);
 
-		md3dImmediateContext->PSSetShader(mPixelShader, NULL, 0);
-		md3dImmediateContext->PSSetSamplers(0, 1, &mLinearSampleState);
+		md3dContext->PSSetShader(mPixelShader, NULL, 0);
+		md3dContext->PSSetSamplers(0, 1, &mLinearSampleState);
 
-		md3dImmediateContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
+		md3dContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
 
-		md3dImmediateContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
-		md3dImmediateContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
+		md3dContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
+		md3dContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
 
 		memcpy(mCBPerFrame.DirLight, mDirLights, sizeof(mCBPerFrame.DirLight));
 		mCBPerFrame.EyePosW = mEyePosW;
 
-		md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
 
 		Object object;
 
@@ -205,8 +205,8 @@ namespace texturing
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &object.VertexBuffer, &stride, &offset);
-		md3dImmediateContext->IASetIndexBuffer(object.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		md3dContext->IASetVertexBuffers(0, 1, &object.VertexBuffer, &stride, &offset);
+		md3dContext->IASetIndexBuffer(object.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 		mCBPerObject.World = *object.WorldMat;
 		mCBPerObject.WorldInvTranspose = MathHelper::InverseTranspose(*object.WorldMat);
@@ -220,11 +220,11 @@ namespace texturing
 
 		mCBPerObject.Material = *object.Material;
 
-		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
 
-		md3dImmediateContext->PSSetShaderResources(0, 1, &object.SRV);
+		md3dContext->PSSetShaderResources(0, 1, &object.SRV);
 
-		md3dImmediateContext->DrawIndexed(object.IndexCount, 0, 0);
+		md3dContext->DrawIndexed(object.IndexCount, 0, 0);
 	}
 
 	void D3DSample::OnMouseDown(WPARAM btnState, int x, int y)

@@ -32,7 +32,7 @@ namespace common
 		, m4xMsaaQuality(0)
 
 		, md3dDevice(nullptr)
-		, md3dImmediateContext(nullptr)
+		, md3dContext(nullptr)
 		, mSwapChain(nullptr)
 		, mDepthStencilBuffer(nullptr)
 		, mRenderTargetView(nullptr)
@@ -55,10 +55,10 @@ namespace common
 		ReleaseCOM(mSwapChain);
 		ReleaseCOM(mDepthStencilBuffer);
 
-		if (md3dImmediateContext)
-			md3dImmediateContext->ClearState();
+		if (md3dContext)
+			md3dContext->ClearState();
 
-		ReleaseCOM(md3dImmediateContext);
+		ReleaseCOM(md3dContext);
 		ReleaseCOM(md3dDevice);
 	}
 
@@ -159,7 +159,7 @@ namespace common
 				D3D11_SDK_VERSION,
 				&md3dDevice,
 				&featureLevel,
-				&md3dImmediateContext);
+				&md3dContext);
 
 			if (FAILED(hr))
 			{
@@ -226,7 +226,7 @@ namespace common
 
 	void D3DProcessor::OnResize()
 	{
-		assert(md3dImmediateContext);
+		assert(md3dContext);
 		assert(md3dDevice);
 		assert(mSwapChain);
 
@@ -267,7 +267,7 @@ namespace common
 		md3dDevice->CreateTexture2D(&depthStencilDesc, 0, &mDepthStencilBuffer);
 		md3dDevice->CreateDepthStencilView(mDepthStencilBuffer, 0, &mDepthStencilView);
 
-		md3dImmediateContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
+		md3dContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
 
 		mScreenViewport.TopLeftX = 0;
 		mScreenViewport.TopLeftY = 0;
@@ -276,7 +276,7 @@ namespace common
 		mScreenViewport.MinDepth = 0.0f;
 		mScreenViewport.MaxDepth = 1.0f;
 
-		md3dImmediateContext->RSSetViewports(1, &mScreenViewport);
+		md3dContext->RSSetViewports(1, &mScreenViewport);
 	}
 
 	LRESULT D3DProcessor::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
