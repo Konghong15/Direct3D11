@@ -145,6 +145,7 @@
     <ClInclude Include="D3DSample.h" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <FxCompile Include="..\Resource\Shader\BillboardGS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -158,6 +159,11 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
+=======
+    <FxCompile Include="..\Resource\Shader\BillboardGS.hlsl" />
+    <FxCompile Include="..\Resource\Shader\BillboardPS.hlsl" />
+    <FxCompile Include="..\Resource\Shader\BillboardVS.hlsl" />
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

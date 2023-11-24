@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #include "RenderStates.h"
+=======
+#include "RenderState.h"
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 #include "D3DUtil.h"
 
 namespace common
