@@ -62,28 +62,6 @@ namespace blending
 
 	D3DSample::~D3DSample()
 	{
-		ReleaseCOM(mPerObjectCB);
-		ReleaseCOM(mPerFrameCB);
-
-		ReleaseCOM(mLandVB);
-		ReleaseCOM(mLandIB);
-
-		ReleaseCOM(mWavesVB);
-		ReleaseCOM(mWavesIB);
-
-		ReleaseCOM(mBoxVB);
-		ReleaseCOM(mBoxIB);
-
-		ReleaseCOM(mGrassMapSRV);
-		ReleaseCOM(mWavesMapSRV);
-		ReleaseCOM(mBoxMapSRV);
-		ReleaseCOM(mLinearSampleState);
-
-		ReleaseCOM(mVertexShader);
-		ReleaseCOM(mVertexShaderBuffer);
-		ReleaseCOM(mPixelShader);
-		ReleaseCOM(mInputLayout);
-
 		RenderStates::Destroy();
 	}
 
@@ -147,7 +125,7 @@ namespace blending
 		mWaves.Update(deltaTime);
 
 		D3D11_MAPPED_SUBRESOURCE mappedData;
-		HR(md3dContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+		HR(md3dImmediateContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
 
 		Vertex* v = reinterpret_cast<Vertex*>(mappedData.pData);
 		for (UINT i = 0; i < mWaves.GetVertexCount(); ++i)
@@ -160,7 +138,7 @@ namespace blending
 			v[i].Tex.y = 0.5f - mWaves[i].z / mWaves.GetDepth();
 		}
 
-		md3dContext->Unmap(mWavesVB, 0);
+		md3dImmediateContext->Unmap(mWavesVB, 0);
 
 		mWaterTexOffset.y += 0.5f * deltaTime;
 		mWaterTexOffset.x += 1.f * deltaTime;
@@ -178,51 +156,51 @@ namespace blending
 
 	void D3DSample::Render()
 	{
-		assert(md3dContext);
+		assert(md3dImmediateContext);
 		assert(mSwapChain);
 
 		float color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
 
-		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
-		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, color);
+		md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		md3dContext->IASetInputLayout(mInputLayout);
+		md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		md3dImmediateContext->IASetInputLayout(mInputLayout);
 
-		md3dContext->VSSetShader(mVertexShader, NULL, 0);
+		md3dImmediateContext->VSSetShader(mVertexShader, NULL, 0);
 
-		md3dContext->PSSetShader(mPixelShader, NULL, 0);
-		md3dContext->PSSetSamplers(0, 1, &mLinearSampleState);
+		md3dImmediateContext->PSSetShader(mPixelShader, NULL, 0);
+		md3dImmediateContext->PSSetSamplers(0, 1, &mLinearSampleState);
 
-		md3dContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
+		md3dImmediateContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
 
-		md3dContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
-		md3dContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
+		md3dImmediateContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
+		md3dImmediateContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
 
 		memcpy(mCBPerFrame.DirLight, mDirLights, sizeof(mCBPerFrame.DirLight));
 		mCBPerFrame.EyePosW = mEyePosW;
 		mCBPerFrame.FogStart = 25.f;
 		mCBPerFrame.FogRange = 175.f;
-		mCBPerFrame.FogColor = common::Silver;
+		mCBPerFrame.FogColor = common::Black;
 
-		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+		md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
 
 		Object object;
 		float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-		md3dContext->RSSetState(RenderStates::NoCullRS);
+		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
 		Matrix identity = Matrix::Identity;
 		object = { mBoxVB, mBoxIB, mBoxIndexCount, mBoxMapSRV, &mBoxWorld, &identity, &mBoxMat };
 		drawObject(object);
-		md3dContext->RSSetState(NULL);
+		md3dImmediateContext->RSSetState(NULL);
 
 		object = { mLandVB, mLandIB, mLandIndexCount, mGrassMapSRV, &mLandWorld, &mGrassTexTransform, &mLandMat };
 		drawObject(object);
 
-		md3dContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
+		md3dImmediateContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
 		object = { mWavesVB, mWavesIB, mWaves.GetTriangleCount() * 3, mWavesMapSRV, &mWavesWorld, &mWaterTexTransform, &mWavesMat };
 		drawObject(object);
-		md3dContext->OMSetBlendState(0, blendFactor, 0xffffffff);
+		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 
 		mSwapChain->Present(0, 0);
 	}
@@ -232,8 +210,8 @@ namespace blending
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 
-		md3dContext->IASetVertexBuffers(0, 1, &object.VertexBuffer, &stride, &offset);
-		md3dContext->IASetIndexBuffer(object.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &object.VertexBuffer, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(object.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 		mCBPerObject.World = *object.WorldMat;
 		mCBPerObject.WorldInvTranspose = MathHelper::InverseTranspose(*object.WorldMat);
@@ -247,11 +225,11 @@ namespace blending
 
 		mCBPerObject.Material = *object.Material;
 
-		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
 
-		md3dContext->PSSetShaderResources(0, 1, &object.SRV);
+		md3dImmediateContext->PSSetShaderResources(0, 1, &object.SRV);
 
-		md3dContext->DrawIndexed(object.IndexCount, 0, 0);
+		md3dImmediateContext->DrawIndexed(object.IndexCount, 0, 0);
 	}
 
 	void D3DSample::OnMouseDown(WPARAM btnState, int x, int y)

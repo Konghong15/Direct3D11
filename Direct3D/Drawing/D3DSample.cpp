@@ -103,7 +103,7 @@ namespace drawing
 		mWaves.Update(deltaTime);
 
 		D3D11_MAPPED_SUBRESOURCE mappedData;
-		HR(md3dContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+		HR(md3dImmediateContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
 
 		Vertex* vertices = reinterpret_cast<Vertex*>(mappedData.pData);
 		for (UINT i = 0; i < mWaves.GetVertexCount(); ++i)
@@ -112,26 +112,26 @@ namespace drawing
 			vertices[i].Color = common::Silver;
 		}
 
-		md3dContext->Unmap(mWavesVB, 0);
+		md3dImmediateContext->Unmap(mWavesVB, 0);
 	}
 
 	void D3DSample::Render()
 	{
-		assert(md3dContext);
+		assert(md3dImmediateContext);
 		assert(mSwapChain);
 
 		float color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
 
-		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
-		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, color);
+		md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		md3dContext->IASetInputLayout(mInputLayout);
-		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		md3dImmediateContext->IASetInputLayout(mInputLayout);
+		md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		md3dContext->VSSetShader(mVertexShader, NULL, 0);
-		md3dContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
+		md3dImmediateContext->VSSetShader(mVertexShader, NULL, 0);
+		md3dImmediateContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
 
-		md3dContext->PSSetShader(mPixelShader, NULL, 0);
+		md3dImmediateContext->PSSetShader(mPixelShader, NULL, 0);
 
 		drawObject(mSkullVB, mSkullIB, mSkullIndexCount);
 		drawObject(mWavesVB, mWavesIB, 3 * mWaves.GetTriangleCount());
@@ -148,31 +148,31 @@ namespace drawing
 	{
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
-		md3dContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-		md3dContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 		mCBPerObject.WVPMat = worldMatrix * mView * mProj;
 		mCBPerObject.WVPMat = mCBPerObject.WVPMat.Transpose();
 
-		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
 
-		md3dContext->DrawIndexed(indexSize, 0, 0);
+		md3dImmediateContext->DrawIndexed(indexSize, 0, 0);
 	}
 
 	void D3DSample::drawShape(eShapeType shapeType, const DirectX::SimpleMath::Matrix& worldMatrix)
 	{
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
-		md3dContext->IASetVertexBuffers(0, 1, &mShapeVB, &stride, &offset);
-		md3dContext->IASetIndexBuffer(mShapeIB, DXGI_FORMAT_R32_UINT, 0);
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mShapeVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mShapeIB, DXGI_FORMAT_R32_UINT, 0);
 
 		mCBPerObject.WVPMat = worldMatrix * mView * mProj;
 		mCBPerObject.WVPMat = mCBPerObject.WVPMat.Transpose();
 
-		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
 
 		unsigned int shapeIndex = static_cast<unsigned int>(shapeType);
-		md3dContext->DrawIndexed(mIndexCounts[shapeIndex], mIndexOffsets[shapeIndex], mVertexOffsets[shapeIndex]);
+		md3dImmediateContext->DrawIndexed(mIndexCounts[shapeIndex], mIndexOffsets[shapeIndex], mVertexOffsets[shapeIndex]);
 	}
 
 	void D3DSample::OnMouseDown(WPARAM btnState, int x, int y)

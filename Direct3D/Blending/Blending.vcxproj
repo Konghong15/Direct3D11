@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="D3DSample.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="RenderState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
@@ -143,6 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3DSample.h" />
+    <ClInclude Include="RenderState.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Resource\Shader\BlendingPS.hlsl">
