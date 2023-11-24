@@ -116,20 +116,40 @@ namespace stenciling
 		md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 		// 인풋 레이아웃, 버택스, 인덱스, 토폴로지
+<<<<<<< HEAD
 		md3dImmediateContext->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		md3dImmediateContext->IASetInputLayout(mInputLayout);
 		md3dImmediateContext->IASetVertexBuffers();
 		md3dImmediateContext->IASetIndexBuffers();
+=======
+<<<<<<< HEAD
+		md3dContext->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		md3dContext->IASetInputLayout(mInputLayout);
+=======
+		md3dImmediateContext->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		md3dImmediateContext->IASetInputLayout(mInputLayout);
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
+>>>>>>> 7867f75cb4e6f8a5563d2fecd94fd52a8516fed6
 
 		// 버택스 쉐이더, 상수버퍼
 		md3dImmediateContext->VSSetShader(mVertexShader, NULL, 0);
 		md3dImmediateContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
 
 		// 픽셀 쉐이더, 쉐이더리소스뷰, 샘플러스테이트, 상수버퍼
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+		md3dContext->PSSetShader(mPixelShader, NULL, 0);
+		md3dContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
+		md3dContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
+		md3dContext->PSSetSamplers(0, 1, &mLinearSampler);
+=======
+>>>>>>> 7867f75cb4e6f8a5563d2fecd94fd52a8516fed6
 		md3dImmediateContext->PSSetShader(mPixelShader, NULL, 0);
 		md3dImmediateContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
 		md3dImmediateContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
 		md3dImmediateContext->PSSetSamplers(0, 1, &mLinearSampler);
+<<<<<<< HEAD
 		md3dImmediateContext->PSSetShaderResources(0, 1, &mFloorDiffuseMapSRV);
 		md3dImmediateContext->PSSetShaderResources(1, 1, &mWallDiffuseMapSRV);
 		md3dImmediateContext->PSSetShaderResources(2, 1, &mMirrorDiffuseMapSRV);
@@ -138,6 +158,27 @@ namespace stenciling
 
 		// floor
 		md3dImmediateContext->Draw(6, 0);
+=======
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
+
+		memcpy(mCBPerFrame.DirLight, mDirLights, sizeof(mCBPerFrame.DirLight));
+		mCBPerFrame.EyePosW = mEyePosW;
+		mCBPerFrame.LigthCount = 3;
+		mCBPerFrame.FogColor = common::Black;
+		mCBPerFrame.FogStart = 2.f;
+		mCBPerFrame.FogRange = 40.f;
+		mCBPerFrame.bUseTexutre = true;
+<<<<<<< HEAD
+		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+=======
+		md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
+
+		// 벽이랑 바닥 해골 그냥 그리기
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0u;
+<<<<<<< HEAD
+>>>>>>> 7867f75cb4e6f8a5563d2fecd94fd52a8516fed6
 
 		// wall
 		md3dImmediateContext->Draw(18, 6);
@@ -145,7 +186,191 @@ namespace stenciling
 		// skull
 		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
 
+<<<<<<< HEAD
 		// mirror
+=======
+		md3dContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
+		md3dContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
+		updateCBPerObject(mSkullWorld, Matrix::Identity, mSkullMat);
+		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		mCBPerFrame.bUseTexutre = false;
+		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+		md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
+
+		// 미러를 스텐실에 그리기
+		md3dContext->IASetVertexBuffers(0, 1, &mRoomVB, &stride, &offset);
+
+		updateCBPerObject(mRoomWorld, Matrix::Identity, mRoomMat);
+		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+
+		float blendFactor[] = { 0.f, 0.f, 0.f, 0.f };
+		md3dContext->OMSetBlendState(RenderStates::NoRenderTargetWritesBS, blendFactor, 0xff'ff'ff'ff);
+		md3dContext->OMSetDepthStencilState(RenderStates::MarkMirrorDSS, 1); // 깊이 판정이 참인 경우 1을 쓴다.
+		md3dContext->Draw(6, 24);
+		md3dContext->OMSetDepthStencilState(NULL, 0);
+		md3dContext->OMSetBlendState(NULL, blendFactor, 0xff'ff'ff'ff);
+
+		// 반사된 해골 그리기
+		md3dContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
+		md3dContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
+=======
+
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mRoomVB, &stride, &offset);
+		updateCBPerObject(mRoomWorld, Matrix::Identity, mRoomMat);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dImmediateContext->PSSetShaderResources(0, 1, &mFloorDiffuseMapSRV);
+		md3dImmediateContext->Draw(6, 0);
+
+		md3dImmediateContext->PSSetShaderResources(0, 1, &mWallDiffuseMapSRV);
+		md3dImmediateContext->Draw(18, 6);
+
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
+		updateCBPerObject(mSkullWorld, Matrix::Identity, mSkullMat);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		mCBPerFrame.bUseTexutre = false;
+		md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
+
+		// 미러를 스텐실에 그리기
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mRoomVB, &stride, &offset);
+
+		updateCBPerObject(mRoomWorld, Matrix::Identity, mRoomMat);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+
+		float blendFactor[] = { 0.f, 0.f, 0.f, 0.f };
+		md3dImmediateContext->OMSetBlendState(RenderStates::NoRenderTargetWritesBS, blendFactor, 0xff'ff'ff'ff);
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::MarkMirrorDSS, 1); // 깊이 판정이 참인 경우 1을 쓴다.
+		md3dImmediateContext->Draw(6, 24);
+		md3dImmediateContext->OMSetDepthStencilState(NULL, 0);
+		md3dImmediateContext->OMSetBlendState(NULL, blendFactor, 0xff'ff'ff'ff);
+
+		// 반사된 해골 그리기
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
+
+		Plane mirrorPlane(0.f, 0.f, 1.f, 0.f);
+		Matrix r = DirectX::XMMatrixReflect(mirrorPlane);
+		updateCBPerObject(mSkullWorld * r, Matrix::Identity, mSkullMat);
+<<<<<<< HEAD
+		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+=======
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
+
+		mCBPerFrame.bUseTexutre = false;
+		mCBPerFrame.DirLight[0].Direction = DirectX::XMVector3TransformNormal(mCBPerFrame.DirLight[0].Direction, r);
+		mCBPerFrame.DirLight[1].Direction = DirectX::XMVector3TransformNormal(mCBPerFrame.DirLight[1].Direction, r);
+		mCBPerFrame.DirLight[2].Direction = DirectX::XMVector3TransformNormal(mCBPerFrame.DirLight[2].Direction, r);
+<<<<<<< HEAD
+		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+
+		md3dContext->RSSetState(RenderStates::CullClockwiseRS); // 반시계방향을 전면으로 가정한다.
+		md3dContext->OMSetDepthStencilState(RenderStates::DrawReflectionDSS, 1); // 스텐실이 1과 같으면 렌더링한다.
+		md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
+		md3dContext->RSSetState(NULL);
+		md3dContext->OMSetDepthStencilState(NULL, 0);
+
+		// 반사된 바닥 그리기
+		md3dContext->IASetVertexBuffers(0, 1, &mRoomVB, &stride, &offset);
+		updateCBPerObject(mRoomWorld * r, Matrix::Identity, mRoomMat);
+		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dContext->PSSetShaderResources(0, 1, &mWallDiffuseMapSRV);
+		mCBPerFrame.bUseTexutre = true;
+		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+
+		md3dContext->RSSetState(RenderStates::CullClockwiseRS); // 반시계방향을 전면으로 가정한다.
+		md3dContext->OMSetDepthStencilState(RenderStates::DrawReflectionDSS, 1); // 스텐실이 1과 같으면 렌더링한다.
+		md3dContext->PSSetShaderResources(0, 1, &mFloorDiffuseMapSRV);
+		md3dContext->Draw(6, 0);
+		md3dContext->RSSetState(NULL);
+		md3dContext->OMSetDepthStencilState(NULL, 0);
+
+		// 투명도 혼합
+		md3dContext->IASetVertexBuffers(0, 1, &mRoomVB, &stride, &offset);
+
+		updateCBPerObject(mRoomWorld, Matrix::Identity, mMirrorMat);
+		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+
+		mCBPerFrame.bUseTexutre = true;
+		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+
+		md3dContext->PSSetShaderResources(0, 1, &mMirrorDiffuseMapSRV);
+
+		md3dContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
+		md3dContext->Draw(6, 24);
+		md3dContext->OMSetBlendState(NULL, blendFactor, 0xffffffff);
+
+		// 그림자
+		md3dContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
+		md3dContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
+=======
+		md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+
+		md3dImmediateContext->RSSetState(RenderStates::CullClockwiseRS); // 반시계방향을 전면으로 가정한다.
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DrawReflectionDSS, 1); // 스텐실이 1과 같으면 렌더링한다.
+		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
+		md3dImmediateContext->RSSetState(NULL);
+		md3dImmediateContext->OMSetDepthStencilState(NULL, 0);
+
+		// 반사된 바닥 그리기
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mRoomVB, &stride, &offset);
+		updateCBPerObject(mRoomWorld * r, Matrix::Identity, mRoomMat);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dImmediateContext->PSSetShaderResources(0, 1, &mWallDiffuseMapSRV);
+		mCBPerFrame.bUseTexutre = true;
+		md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+
+		md3dImmediateContext->RSSetState(RenderStates::CullClockwiseRS); // 반시계방향을 전면으로 가정한다.
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DrawReflectionDSS, 1); // 스텐실이 1과 같으면 렌더링한다.
+		md3dImmediateContext->PSSetShaderResources(0, 1, &mFloorDiffuseMapSRV);
+		md3dImmediateContext->Draw(6, 0);
+		md3dImmediateContext->RSSetState(NULL);
+		md3dImmediateContext->OMSetDepthStencilState(NULL, 0);
+
+		// 투명도 혼합
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mRoomVB, &stride, &offset);
+
+		updateCBPerObject(mRoomWorld, Matrix::Identity, mMirrorMat);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+
+		mCBPerFrame.bUseTexutre = true;
+		md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+
+		md3dImmediateContext->PSSetShaderResources(0, 1, &mMirrorDiffuseMapSRV);
+
+		md3dImmediateContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
+		md3dImmediateContext->Draw(6, 24);
+		md3dImmediateContext->OMSetBlendState(NULL, blendFactor, 0xffffffff);
+
+		// 그림자
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
+
+		Plane shadowPlane(0.f, 1.f, 0.f, 0.f);
+		Matrix s = DirectX::XMMatrixShadow(shadowPlane, -mDirLights[0].Direction);
+		Matrix shadowOffsetY = Matrix::CreateTranslation(0.f, 0.001f, 0.0f);
+		updateCBPerObject(mSkullWorld * s * shadowOffsetY, Matrix::Identity, mShadowMat);
+<<<<<<< HEAD
+		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+
+		md3dContext->OMSetDepthStencilState(RenderStates::NoDoubleBlendDSS, 0);
+		md3dContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
+		md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
+		md3dContext->OMSetBlendState(NULL, blendFactor, 0xffffffff);
+		md3dContext->OMSetDepthStencilState(NULL, 0);
+=======
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::NoDoubleBlendDSS, 0);
+		md3dImmediateContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
+		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
+		md3dImmediateContext->OMSetBlendState(NULL, blendFactor, 0xffffffff);
+		md3dImmediateContext->OMSetDepthStencilState(NULL, 0);
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
+>>>>>>> 7867f75cb4e6f8a5563d2fecd94fd52a8516fed6
 
 		mSwapChain->Present(0, 0);
 	}
