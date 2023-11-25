@@ -3,10 +3,7 @@
 #include "D3DSample.h"
 #include "RenderStates.h"
 #include "GeometryGenerator.h"
-<<<<<<< HEAD
 #include "MathHelper.h"
-=======
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 
 namespace geometryShader
 {
@@ -66,7 +63,6 @@ namespace geometryShader
 	}
 	D3DSample::~D3DSample()
 	{
-<<<<<<< HEAD
 		ReleaseCOM(mPerFrameCB);
 
 		ReleaseCOM(mPerObjectCBBasic32);
@@ -84,18 +80,6 @@ namespace geometryShader
 
 		ReleaseCOM(mLinearSamplerWrap);
 		ReleaseCOM(mLinearSamplerClamp);
-=======
-		ReleaseCOM(mPerObjectCB);
-		ReleaseCOM(mPerFrameCB);
-
-		ReleaseCOM(mVertexShader);
-		ReleaseCOM(mVertexShaderBlob);
-		ReleaseCOM(mGeometryShader);
-		ReleaseCOM(mPixelShader);
-		ReleaseCOM(mInputLayout);
-
-		ReleaseCOM(mLinearSampler);
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 
 		ReleaseCOM(mLandVB);
 		ReleaseCOM(mLandIB);
@@ -112,11 +96,8 @@ namespace geometryShader
 		ReleaseCOM(mWavesMapSRV);
 		ReleaseCOM(mBoxMapSRV);
 		ReleaseCOM(mTreeTextureMapArraySRV);
-<<<<<<< HEAD
 
 		RenderStates::Destroy();
-=======
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 	}
 
 	bool D3DSample::Init()
@@ -129,7 +110,6 @@ namespace geometryShader
 		RenderStates::Init(md3dDevice);
 
 		// 텍스처 로딩
-<<<<<<< HEAD
 		HR(CreateDDSTextureFromFile(md3dDevice,
 			L"../Resource/Textures/grass.dds", NULL, &mGrassMapSRV));
 
@@ -146,25 +126,6 @@ namespace geometryShader
 		treeFilenames.push_back(L"../Resource/Textures/tree3.dds");
 
 		mTreeTextureMapArraySRV = D3DHelper::CreateTexture2DArraySRV(md3dDevice, md3dContext, treeFilenames);
-=======
-		HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice,
-			L"Textures/grass.dds", 0, 0, &mGrassMapSRV, 0));
-
-		HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice,
-			L"Textures/water2.dds", 0, 0, &mWavesMapSRV, 0));
-
-		HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice,
-			L"Textures/WireFence.dds", 0, 0, &mBoxMapSRV, 0));
-
-		std::vector<std::wstring> treeFilenames;
-		treeFilenames.push_back(L"Textures/tree0.dds");
-		treeFilenames.push_back(L"Textures/tree1.dds");
-		treeFilenames.push_back(L"Textures/tree2.dds");
-		treeFilenames.push_back(L"Textures/tree3.dds");
-
-		mTreeTextureMapArraySRV = d3dHelper::CreateTexture2DArraySRV(
-			md3dDevice, md3dImmediateContext, treeFilenames, DXGI_FORMAT_R8G8B8A8_UNORM);
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 
 		buildConstantBuffer();
 		buildShader();
@@ -216,11 +177,7 @@ namespace geometryShader
 		mWaves.Update(deltaTime);
 
 		D3D11_MAPPED_SUBRESOURCE mappedData;
-<<<<<<< HEAD
 		HR(md3dContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
-=======
-		HR(md3dImmediateContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 
 		vertex::Basic32* v = reinterpret_cast<vertex::Basic32*>(mappedData.pData);
 		for (UINT i = 0; i < mWaves.GetVertexCount(); ++i)
@@ -232,11 +189,7 @@ namespace geometryShader
 			v[i].Tex.y = 0.5f - mWaves[i].z / mWaves.GetDepth();
 		}
 
-<<<<<<< HEAD
 		md3dContext->Unmap(mWavesVB, 0);
-=======
-		md3dImmediateContext->Unmap(mWavesVB, 0);
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 
 		XMMATRIX wavesScale = XMMatrixScaling(5.0f, 5.0f, 0.0f);
 		mWaterTexOffset.y += 0.05f * deltaTime;
@@ -248,7 +201,6 @@ namespace geometryShader
 
 	void D3DSample::Render()
 	{
-<<<<<<< HEAD
 		assert(md3dContext);
 		assert(mSwapChain);
 
@@ -275,27 +227,26 @@ namespace geometryShader
 		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
 
 		auto bindBuffer = [&](ID3D11Buffer* VB, ID3D11Buffer* IB)
-		{
-			md3dContext->IASetVertexBuffers(0, 1, &VB, &stride, &offset);
-			md3dContext->IASetIndexBuffer(IB, DXGI_FORMAT_R32_UINT, 0);
-		};
+			{
+				md3dContext->IASetVertexBuffers(0, 1, &VB, &stride, &offset);
+				md3dContext->IASetIndexBuffer(IB, DXGI_FORMAT_R32_UINT, 0);
+			};
 
 		auto applyCB = [&](const Matrix& world, const Material& mat, const Matrix& tex, ID3D11ShaderResourceView* SRV)
-		{
-			mCBPerObjectBasic32.World = world;
-			mCBPerObjectBasic32.WorldInvTranspose = MathHelper::InverseTranspose(world);
-			mCBPerObjectBasic32.WorldViewProj = world * mView * mProj;
-			mCBPerObjectBasic32.Material = mat;
-			mCBPerObjectBasic32.Tex = tex;
+			{
+				mCBPerObjectBasic32.World = world;
+				mCBPerObjectBasic32.WorldInvTranspose = MathHelper::InverseTranspose(world);
+				mCBPerObjectBasic32.WorldViewProj = world * mView * mProj;
+				mCBPerObjectBasic32.Material = mat;
+				mCBPerObjectBasic32.Tex = tex;
 
-			mCBPerObjectBasic32.World = mCBPerObjectBasic32.World.Transpose();
-			mCBPerObjectBasic32.WorldInvTranspose = mCBPerObjectBasic32.WorldInvTranspose.Transpose();
-			mCBPerObjectBasic32.WorldViewProj = mCBPerObjectBasic32.WorldViewProj.Transpose();
-			mCBPerObjectBasic32.Tex = mCBPerObjectBasic32.Tex.Transpose();
+				mCBPerObjectBasic32.World = mCBPerObjectBasic32.World.Transpose();
+				mCBPerObjectBasic32.WorldInvTranspose = mCBPerObjectBasic32.WorldInvTranspose.Transpose();
+				mCBPerObjectBasic32.WorldViewProj = mCBPerObjectBasic32.WorldViewProj.Transpose();
 
-			md3dContext->UpdateSubresource(mPerObjectCBBasic32, 0, NULL, &mCBPerObjectBasic32, 0, 0);
-			md3dContext->PSSetShaderResources(0, 1, &SRV);
-		};
+				md3dContext->UpdateSubresource(mPerObjectCBBasic32, 0, NULL, &mCBPerObjectBasic32, 0, 0);
+				md3dContext->PSSetShaderResources(0, 1, &SRV);
+			};
 
 		setShader(mVertexShaderBasic32, nullptr, mPixelShaderBasic32);
 
@@ -304,6 +255,7 @@ namespace geometryShader
 		md3dContext->PSSetSamplers(0, 1, &mLinearSamplerWrap);
 		md3dContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
 		md3dContext->PSSetConstantBuffers(1, 1, &mPerObjectCBBasic32);
+
 
 		bindBuffer(mBoxVB, mBoxIB);
 		applyCB(mBoxWorld, mBoxMat, Matrix::Identity, mBoxMapSRV);
@@ -323,17 +275,6 @@ namespace geometryShader
 		md3dContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 
 		HR(mSwapChain->Present(0, 0));
-=======
-		assert(md3dImmediateContext);
-		assert(mSwapChain);
-
-		float color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
-
-		md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, color);
-		md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-		mSwapChain->Present(0, 0);
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 	}
 
 	void D3DSample::OnMouseDown(WPARAM btnState, int x, int y)
@@ -379,28 +320,11 @@ namespace geometryShader
 		mLastMousePos.y = y;
 	}
 
-<<<<<<< HEAD
 	void D3DSample::setShader(ID3D11VertexShader* VS, ID3D11GeometryShader* GS, ID3D11PixelShader* PS)
 	{
 		md3dContext->VSSetShader(VS, NULL, 0);
 		md3dContext->GSSetShader(GS, NULL, 0);
 		md3dContext->PSSetShader(PS, NULL, 0);
-=======
-	void D3DSample::updateCBPerObject(const Matrix& worldMat, const Matrix& texMat, const Material& material)
-	{
-		mCBPerObject.World = worldMat;
-		mCBPerObject.WorldInvTranspose = MathHelper::InverseTranspose(worldMat);
-		mCBPerObject.WorldViewProj = worldMat * mView * mProj;
-
-		mCBPerObject.Tex = texMat;
-
-		mCBPerObject.Material = material;
-
-		mCBPerObject.World = mCBPerObject.World.Transpose();
-		mCBPerObject.WorldInvTranspose = mCBPerObject.WorldInvTranspose.Transpose();
-		mCBPerObject.WorldViewProj = mCBPerObject.WorldViewProj.Transpose();
-		mCBPerObject.Tex = mCBPerObject.Tex.Transpose();
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 	}
 
 	void D3DSample::buildConstantBuffer()
@@ -415,7 +339,6 @@ namespace geometryShader
 		cbd.StructureByteStride = 0;
 		md3dDevice->CreateBuffer(&cbd, NULL, &mPerFrameCB);
 
-<<<<<<< HEAD
 		static_assert(sizeof(mCBPerObjectBasic32) % 16 == 0, "error");
 		cbd.ByteWidth = sizeof(mCBPerObjectBasic32);
 		md3dDevice->CreateBuffer(&cbd, NULL, &mPerObjectCBBasic32);
@@ -424,11 +347,6 @@ namespace geometryShader
 		cbd.ByteWidth = sizeof(mCBPerObjectSprite);
 		md3dDevice->CreateBuffer(&cbd, NULL, &mPerObjectCBSprite);
 
-=======
-		static_assert(sizeof(CBPerObject) % 16 == 0, "error");
-		cbd.ByteWidth = sizeof(CBPerObject);
-		md3dDevice->CreateBuffer(&cbd, NULL, &mPerObjectCB);
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 	}
 	void D3DSample::buildShader()
 	{
@@ -441,7 +359,6 @@ namespace geometryShader
 		samplerDesc.MinLOD = 0;
 		samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-<<<<<<< HEAD
 		md3dDevice->CreateSamplerState(&samplerDesc, &mLinearSamplerWrap);
 
 		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
@@ -484,28 +401,12 @@ namespace geometryShader
 	void D3DSample::buildInputLayout()
 	{
 		D3D11_INPUT_ELEMENT_DESC basic32InputDesc[] =
-=======
-		md3dDevice->CreateSamplerState(&samplerDesc, &mLinearSampler);
-
-		HR(CompileShaderFromFile(L"../Resource/Shader/StencilingVS.hlsl", "main", "vs_5_0", &mVertexShaderBlob));
-		md3dDevice->CreateVertexShader(mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), NULL, &mVertexShader);
-
-		ID3DBlob* pixelShaderBlob = nullptr;
-		HR(CompileShaderFromFile(L"../Resource/Shader/StencilingPS.hlsl", "main", "ps_5_0", &pixelShaderBlob));
-
-		md3dDevice->CreatePixelShader(pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize(), NULL, &mPixelShader);
-	}
-	void D3DSample::buildInputLayout()
-	{
-		D3D11_INPUT_ELEMENT_DESC inputDesc[] =
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0}
 		};
 
-<<<<<<< HEAD
 		md3dDevice->CreateInputLayout(basic32InputDesc
 			, ARRAYSIZE(basic32InputDesc)
 			, mVertexShaderBlobBasic32->GetBufferPointer()
@@ -523,9 +424,6 @@ namespace geometryShader
 			, mVertexShaderBlobSprite->GetBufferPointer()
 			, mVertexShaderBlobSprite->GetBufferSize()
 			, &mInputLayoutSprite);
-=======
-		md3dDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), &mInputLayout);
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 	}
 
 	float D3DSample::getHillHeight(float x, float z) const
@@ -635,14 +533,6 @@ namespace geometryShader
 		GeometryGenerator geoGen;
 		geoGen.CreateBox(1.0f, 1.0f, 1.0f, &box);
 
-<<<<<<< HEAD
-=======
-		//
-		// Extract the vertex elements we are interested in and pack the
-		// vertices of all the meshes into one vertex buffer.
-		//
-
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 		std::vector<vertex::Basic32> vertices(box.Vertices.size());
 
 		for (UINT i = 0; i < box.Vertices.size(); ++i)
@@ -662,13 +552,6 @@ namespace geometryShader
 		vinitData.pSysMem = &vertices[0];
 		HR(md3dDevice->CreateBuffer(&vbd, &vinitData, &mBoxVB));
 
-<<<<<<< HEAD
-=======
-		//
-		// Pack the indices of all the meshes into one index buffer.
-		//
-
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 		D3D11_BUFFER_DESC ibd;
 		ibd.Usage = D3D11_USAGE_IMMUTABLE;
 		ibd.ByteWidth = sizeof(UINT) * box.Indices.size();
@@ -689,10 +572,6 @@ namespace geometryShader
 			float z = MathHelper::RandF(-35.0f, 35.0f);
 			float y = getHillHeight(x, z);
 
-<<<<<<< HEAD
-=======
-			// Move tree slightly above land height.
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 			y += 10.0f;
 
 			v[i].Pos = XMFLOAT3(x, y, z);
@@ -714,7 +593,6 @@ namespace geometryShader
 		UINT stride = sizeof(vertex::Sprite);
 		UINT offset = 0;
 
-<<<<<<< HEAD
 		mCBPerObjectSprite.ViewProj = viewProj.Transpose();
 		mCBPerObjectSprite.Material = mTreeMat;
 		md3dContext->UpdateSubresource(mPerObjectCBSprite, NULL, 0, &mCBPerObjectSprite, 0, 0);
@@ -738,21 +616,5 @@ namespace geometryShader
 		md3dContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
 		md3dContext->Draw(TreeCount, 0);
 		md3dContext->OMSetBlendState(NULL, blendFactor, 0xffffffff);
-=======
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &mTreeSpritesVB, &stride, &offset);
-		md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-		md3dImmediateContext->IASetInputLayout(mInputLayoutSprite);
-
-		updateCBPerObject(viewProj, Matrix::Identity, mTreeMat);
-
-		md3dImmediateContext->PSSetShaderResources(0, 4, &mTreeTextureMapArraySRV);
-
-		float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		md3dImmediateContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
-
-		md3dImmediateContext->Draw(TreeCount, 0);
-
-		md3dImmediateContext->OMSetBlendState(NULL, blendFactor, 0xffffffff);
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 	}
 }

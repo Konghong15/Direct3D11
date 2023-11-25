@@ -14,7 +14,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Shader">
-      <UniqueIdentifier>{0ce79027-bd93-41ef-b05c-eafecad0fb79}</UniqueIdentifier>
+      <UniqueIdentifier>{85b57878-45f1-4c72-b5bc-90bbd8e3af5e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -31,13 +31,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\Resource\Shader\BlendingPS.hlsl">
+    <FxCompile Include="..\Resource\Shader\BillboardGS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="..\Resource\Shader\BlendingVS.hlsl">
+    <FxCompile Include="..\Resource\Shader\BillboardPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="..\Resource\Shader\LightHelper.hlsl">
+    <FxCompile Include="..\Resource\Shader\BillboardVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>

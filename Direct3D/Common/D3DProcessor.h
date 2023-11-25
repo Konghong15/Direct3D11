@@ -52,7 +52,7 @@ namespace common
 		Timer mTimer;
 
 		ID3D11Device* md3dDevice;
-		ID3D11DeviceContext* md3dImmediateContext;
+		ID3D11DeviceContext* md3dContext;
 		IDXGISwapChain* mSwapChain;
 		ID3D11Texture2D* mDepthStencilBuffer;
 		ID3D11RenderTargetView* mRenderTargetView;

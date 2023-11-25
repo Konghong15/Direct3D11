@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include "LightHelper.hlsl"
 
 cbuffer cbPerObject : register(b0)
@@ -8,12 +7,6 @@ cbuffer cbPerObject : register(b0)
 };
 
 cbuffer cbPerFrame : register(b1)
-=======
-
-#include "LightHelper.hlsl"
- 
-cbuffer cbPerFrame : register(b0)
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 {
 	DirectionLight gDirLights[3];
 	float3 gEyePosW;
@@ -24,7 +17,6 @@ cbuffer cbPerFrame : register(b0)
 	bool gUseTexure;
 };
 
-<<<<<<< HEAD
 cbuffer cbFixed
 {
 	float2 gTexC[4] = 
@@ -43,26 +35,10 @@ struct GeoIn
 };
 
 struct GeoOut
-=======
-cbuffer cbPerObject : register(b1)
-{
-	float4x4 gWorld;
-	float4x4 gWorldInvTranspose;
-	float4x4 gWorldViewProj;
-	float4x4 gTexTransform;
-	Material gMaterial;
-}; 
-
-Texture2D gDiffuseMap : register(t0);
-SamplerState gSamLinear : register(s0);
-
-struct PS_INPUT
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 {
 	float4 PosH    : SV_POSITION;
     float3 PosW    : POSITION;
     float3 NormalW : NORMAL;
-<<<<<<< HEAD
     float2 Tex     : TEXCOORD;
     uint   PrimID  : SV_PrimitiveID;
 };
@@ -111,48 +87,4 @@ void main(point GeoIn gin[1]
 	}
 
 	// triStream.RestartStrip();
-=======
-	float2 Tex     : TEXCOORD;
-};
-
-float4 main(PS_INPUT pin) : SV_Target
-{
-    pin.NormalW = normalize(pin.NormalW);
-
-	float3 toEye = gEyePosW - pin.PosW;
-
-	float distToEye = length(toEye); 
-	
-	toEye /= distToEye;
-	
-    float4 texColor = float4(1, 1, 1, 1);
-    if(gUseTexure)
-	{
-		texColor = gDiffuseMap.Sample(gSamLinear, pin.Tex);
-	}
-	 
-	float4 litColor = texColor;
-	if(gLightCount > 0)
-	{  
-		float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
-		float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
-		float4 spec    = float4(0.0f, 0.0f, 0.0f, 0.0f);
-
-		for(int i = 0; i < gLightCount; ++i)
-		{
-			float4 A, D, S;
-			ComputeDirectionLight(gMaterial, gDirLights[i], pin.NormalW, toEye, A, D, S);
-
-			ambient += A;
-			diffuse += D;
-			spec    += S;
-		}
-
-		litColor =  texColor * (ambient + diffuse) + spec;
-	}
-
-	litColor.a = gMaterial.Diffuse.a * texColor.a;
-
-    return litColor;
->>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 }

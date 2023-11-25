@@ -16,13 +16,13 @@ namespace initalization
 
 	void D3DSample::Render()
 	{
-		assert(md3dImmediateContext);
+		assert(md3dContext);
 		assert(mSwapChain);
 
 		float color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
 
-		md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, color);
-		md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
+		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 		mSwapChain->Present(0, 0);
 	}

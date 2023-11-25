@@ -1,3 +1,4 @@
+
 #include "LightHelper.hlsl"
  
 cbuffer cbPerFrame : register(b0)
@@ -20,16 +21,15 @@ cbuffer cbPerObject : register(b1)
 	Material gMaterial;
 }; 
 
-Texture2DArray gTreeMapArray : register(t0);
-SamplerState gSamLinearClamp : register(s0);
+Texture2D gDiffuseMap : register(t0);
+SamplerState gSamLinear : register(s0);
 
 struct PS_INPUT
 {
 	float4 PosH    : SV_POSITION;
     float3 PosW    : POSITION;
     float3 NormalW : NORMAL;
-    float2 Tex     : TEXCOORD;
-    uint   PrimID  : SV_PrimitiveID;
+	float2 Tex     : TEXCOORD;
 };
 
 float4 main(PS_INPUT pin) : SV_Target
@@ -45,10 +45,9 @@ float4 main(PS_INPUT pin) : SV_Target
     float4 texColor = float4(1, 1, 1, 1);
     if(gUseTexure)
 	{
-		float3 uvw = float3(pin.Tex, 0); //pin.PrimID % 4);
-		texColor = gTreeMapArray.Sample(gSamLinearClamp, uvw);
-	
-		clip(texColor.a - 0.05f);
+		texColor = gDiffuseMap.Sample(gSamLinear, pin.Tex);
+		
+		clip(texColor.a - 0.1f);
 	}
 	 
 	float4 litColor = texColor;
@@ -58,7 +57,6 @@ float4 main(PS_INPUT pin) : SV_Target
 		float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 		float4 spec    = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-		[unroll]
 		for(int i = 0; i < gLightCount; ++i)
 		{
 			float4 A, D, S;
@@ -71,6 +69,9 @@ float4 main(PS_INPUT pin) : SV_Target
 
 		litColor =  texColor * (ambient + diffuse) + spec;
 	}
+
+	float fogLerp = saturate((distToEye - gFogStart) / gFogRange);
+	litColor = lerp(litColor, gFogColor, fogLerp);
 
 	litColor.a = gMaterial.Diffuse.a * texColor.a;
 
