@@ -227,26 +227,27 @@ namespace geometryShader
 		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
 
 		auto bindBuffer = [&](ID3D11Buffer* VB, ID3D11Buffer* IB)
-			{
-				md3dContext->IASetVertexBuffers(0, 1, &VB, &stride, &offset);
-				md3dContext->IASetIndexBuffer(IB, DXGI_FORMAT_R32_UINT, 0);
-			};
+		{
+			md3dContext->IASetVertexBuffers(0, 1, &VB, &stride, &offset);
+			md3dContext->IASetIndexBuffer(IB, DXGI_FORMAT_R32_UINT, 0);
+		};
 
 		auto applyCB = [&](const Matrix& world, const Material& mat, const Matrix& tex, ID3D11ShaderResourceView* SRV)
-			{
-				mCBPerObjectBasic32.World = world;
-				mCBPerObjectBasic32.WorldInvTranspose = MathHelper::InverseTranspose(world);
-				mCBPerObjectBasic32.WorldViewProj = world * mView * mProj;
-				mCBPerObjectBasic32.Material = mat;
-				mCBPerObjectBasic32.Tex = tex;
+		{
+			mCBPerObjectBasic32.World = world;
+			mCBPerObjectBasic32.WorldInvTranspose = MathHelper::InverseTranspose(world);
+			mCBPerObjectBasic32.WorldViewProj = world * mView * mProj;
+			mCBPerObjectBasic32.Material = mat;
+			mCBPerObjectBasic32.Tex = tex;
 
-				mCBPerObjectBasic32.World = mCBPerObjectBasic32.World.Transpose();
-				mCBPerObjectBasic32.WorldInvTranspose = mCBPerObjectBasic32.WorldInvTranspose.Transpose();
-				mCBPerObjectBasic32.WorldViewProj = mCBPerObjectBasic32.WorldViewProj.Transpose();
+			mCBPerObjectBasic32.World = mCBPerObjectBasic32.World.Transpose();
+			mCBPerObjectBasic32.WorldInvTranspose = mCBPerObjectBasic32.WorldInvTranspose.Transpose();
+			mCBPerObjectBasic32.WorldViewProj = mCBPerObjectBasic32.WorldViewProj.Transpose();
+			mCBPerObjectBasic32.Tex = mCBPerObjectBasic32.Tex.Transpose();
 
-				md3dContext->UpdateSubresource(mPerObjectCBBasic32, 0, NULL, &mCBPerObjectBasic32, 0, 0);
-				md3dContext->PSSetShaderResources(0, 1, &SRV);
-			};
+			md3dContext->UpdateSubresource(mPerObjectCBBasic32, 0, NULL, &mCBPerObjectBasic32, 0, 0);
+			md3dContext->PSSetShaderResources(0, 1, &SRV);
+		};
 
 		setShader(mVertexShaderBasic32, nullptr, mPixelShaderBasic32);
 
@@ -255,7 +256,6 @@ namespace geometryShader
 		md3dContext->PSSetSamplers(0, 1, &mLinearSamplerWrap);
 		md3dContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
 		md3dContext->PSSetConstantBuffers(1, 1, &mPerObjectCBBasic32);
-
 
 		bindBuffer(mBoxVB, mBoxIB);
 		applyCB(mBoxWorld, mBoxMat, Matrix::Identity, mBoxMapSRV);
