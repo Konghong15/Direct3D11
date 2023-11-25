@@ -39,15 +39,6 @@
     <ClInclude Include="Waves.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderStates.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="VertexLayouts.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D3DProcessor.cpp">
@@ -63,9 +54,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Waves.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderStates.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

@@ -40,7 +40,11 @@ namespace geometryShader
 	using namespace DirectX;
 	using namespace SimpleMath;
 
+<<<<<<< HEAD
 	struct CBPerObjectBasic32
+=======
+	struct CBPerObject
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 	{
 		Matrix World;
 		Matrix WorldInvTranspose;
@@ -49,12 +53,15 @@ namespace geometryShader
 		Material Material;
 	};
 
+<<<<<<< HEAD
 	struct CBPerObjectSprite
 	{
 		Matrix ViewProj;
 		Material Material;
 	};
 
+=======
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 	struct CBPerFrame
 	{
 		DirectionLight DirLight[3];
@@ -83,7 +90,11 @@ namespace geometryShader
 		void OnMouseMove(WPARAM btnState, int x, int y);
 
 	public:
+<<<<<<< HEAD
 		void setShader(ID3D11VertexShader* VS, ID3D11GeometryShader* GS, ID3D11PixelShader* PS);
+=======
+		void updateCBPerObject(const Matrix& worldMat, const Matrix& TexMat, const Material& material);
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 
 		void buildConstantBuffer();
 		void buildShader();
@@ -98,6 +109,7 @@ namespace geometryShader
 		void drawTreeSprites(Matrix viewProj);
 
 	private:
+<<<<<<< HEAD
 		CBPerObjectBasic32 mCBPerObjectBasic32;
 		CBPerObjectSprite mCBPerObjectSprite;
 		CBPerFrame mCBPerFrame;
@@ -118,6 +130,21 @@ namespace geometryShader
 
 		ID3D11SamplerState* mLinearSamplerWrap;
 		ID3D11SamplerState* mLinearSamplerClamp;
+=======
+		CBPerObject mCBPerObject;
+		CBPerFrame mCBPerFrame;
+		ID3D11Buffer* mPerObjectCB;
+		ID3D11Buffer* mPerFrameCB;
+
+		ID3D11VertexShader* mVertexShader;
+		ID3DBlob* mVertexShaderBlob;
+		ID3D11GeometryShader* mGeometryShader;
+		ID3D11PixelShader* mPixelShader;
+		ID3D11InputLayout* mInputLayoutBasic32;
+		ID3D11InputLayout* mInputLayoutSprite;
+
+		ID3D11SamplerState* mLinearSampler;
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 
 		ID3D11Buffer* mLandVB;
 		ID3D11Buffer* mLandIB;
@@ -153,7 +180,11 @@ namespace geometryShader
 
 		UINT mLandIndexCount;
 
+<<<<<<< HEAD
 		static const UINT TreeCount = 32;
+=======
+		static const UINT TreeCount = 16;
+>>>>>>> f28e2c70cf10b53e093048452045bbb87e54af45
 
 		bool mAlphaToCoverageOn;
 

@@ -156,7 +156,7 @@ namespace lighting
 		mWaves.Update(deltaTime);
 
 		D3D11_MAPPED_SUBRESOURCE mappedData;
-		HR(md3dContext->Map(mWavesModel.VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+		HR(md3dImmediateContext->Map(mWavesModel.VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
 
 		Vertex* vertices = reinterpret_cast<Vertex*>(mappedData.pData);
 		for (UINT i = 0; i < mWaves.GetVertexCount(); ++i)
@@ -165,7 +165,7 @@ namespace lighting
 			vertices[i].Normal = mWaves.GetNormal(i);
 		}
 
-		md3dContext->Unmap(mWavesModel.VertexBuffer, 0);
+		md3dImmediateContext->Unmap(mWavesModel.VertexBuffer, 0);
 
 		// Circle light over the land surface.
 		mPointLight.Position.x = 70.0f * cosf(0.2f * mTimer.GetTotalTime());
@@ -179,20 +179,20 @@ namespace lighting
 
 	void D3DSample::Render()
 	{
-		assert(md3dContext);
+		assert(md3dImmediateContext);
 		assert(mSwapChain);
 
 		float color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
 
-		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
-		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, color);
+		md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		md3dContext->IASetInputLayout(mInputLayout);
-		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		md3dImmediateContext->IASetInputLayout(mInputLayout);
+		md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		md3dContext->VSSetShader(mVertexShader, NULL, 0);
+		md3dImmediateContext->VSSetShader(mVertexShader, NULL, 0);
 
-		md3dContext->PSSetShader(mPixelShader, NULL, 0);
+		md3dImmediateContext->PSSetShader(mPixelShader, NULL, 0);
 
 		{
 			mCBPerFrame.DirLight = mDirLight;
@@ -200,9 +200,9 @@ namespace lighting
 			mCBPerFrame.SpotLight = mSpotLight;
 			mCBPerFrame.EyePosW = mEyePosW;
 
-			md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
+			md3dImmediateContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
 
-			md3dContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
+			md3dImmediateContext->PSSetConstantBuffers(0, 1, &mPerFrameCB);
 		}
 
 		drawModel(mSkullModel, mSkullWorld);
@@ -266,8 +266,8 @@ namespace lighting
 	{
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
-		md3dContext->IASetVertexBuffers(0, 1, &model.VertexBuffer, &stride, &offset);
-		md3dContext->IASetIndexBuffer(model.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &model.VertexBuffer, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(model.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 		mCBPerObject.World = worldMatrix;
 		mCBPerObject.WorldInvTranspose = MathHelper::InverseTranspose(worldMatrix);
@@ -278,20 +278,20 @@ namespace lighting
 		mCBPerObject.WorldInvTranspose = mCBPerObject.WorldInvTranspose.Transpose();
 		mCBPerObject.WorldViewProj = mCBPerObject.WorldViewProj.Transpose();
 
-		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
 
-		md3dContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
-		md3dContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
+		md3dImmediateContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
+		md3dImmediateContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
 
-		md3dContext->DrawIndexed(model.IndexCount, 0, 0);
+		md3dImmediateContext->DrawIndexed(model.IndexCount, 0, 0);
 	}
 
 	void D3DSample::drawObject(ID3D11Buffer* vertexBuffer, ID3D11Buffer* indexBuffer, UINT indexSize, const Material& material, const DirectX::SimpleMath::Matrix& worldMatrix)
 	{
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
-		md3dContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-		md3dContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 		mCBPerObject.World = worldMatrix;
 		mCBPerObject.WorldInvTranspose = MathHelper::InverseTranspose(worldMatrix);
@@ -302,20 +302,20 @@ namespace lighting
 		mCBPerObject.WorldInvTranspose = mCBPerObject.WorldInvTranspose.Transpose();
 		mCBPerObject.WorldViewProj = mCBPerObject.WorldViewProj.Transpose();
 
-		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
 
-		md3dContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
-		md3dContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
+		md3dImmediateContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
+		md3dImmediateContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
 
-		md3dContext->DrawIndexed(indexSize, 0, 0);
+		md3dImmediateContext->DrawIndexed(indexSize, 0, 0);
 	}
 
 	void D3DSample::drawShape(eShapeType shapeType, const DirectX::SimpleMath::Matrix& worldMatrix)
 	{
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
-		md3dContext->IASetVertexBuffers(0, 1, &mShapeVB, &stride, &offset);
-		md3dContext->IASetIndexBuffer(mShapeIB, DXGI_FORMAT_R32_UINT, 0);
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mShapeVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mShapeIB, DXGI_FORMAT_R32_UINT, 0);
 
 		mCBPerObject.World = worldMatrix;
 		mCBPerObject.WorldInvTranspose = MathHelper::InverseTranspose(worldMatrix);
@@ -329,16 +329,16 @@ namespace lighting
 		mCBPerObject.WorldInvTranspose = mCBPerObject.WorldInvTranspose.Transpose();
 		mCBPerObject.WorldViewProj = mCBPerObject.WorldViewProj.Transpose();
 
-		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
 
-		md3dContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
-		md3dContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
+		md3dImmediateContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
+		md3dImmediateContext->PSSetConstantBuffers(1, 1, &mPerObjectCB);
 
 
-		md3dContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
+		md3dImmediateContext->UpdateSubresource(mPerObjectCB, 0, NULL, &mCBPerObject, 0, 0);
 
 		unsigned int shapeIndex = static_cast<unsigned int>(shapeType);
-		md3dContext->DrawIndexed(mIndexCounts[shapeIndex], mIndexOffsets[shapeIndex], mVertexOffsets[shapeIndex]);
+		md3dImmediateContext->DrawIndexed(mIndexCounts[shapeIndex], mIndexOffsets[shapeIndex], mVertexOffsets[shapeIndex]);
 	}
 
 	float D3DSample::getHillHeight(float x, float z) const

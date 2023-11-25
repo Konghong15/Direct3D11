@@ -14,45 +14,28 @@ namespace stenciling
 
 	struct Vertex
 	{
-		Vertex() = default;
-		Vertex(float px, float py, float pz, float nx, float ny, float nz, float tx, float ty)
-			: Pos(px, py, pz)
-			, Normal(nx, ny, nz)
-			, Tex(tx, ty)
-		{
-		}
 
-		Vector3 Pos;
-		Vector3 Normal;
-		Vector2 Tex;
 	};
 
 	struct CBPerObject
 	{
-		Matrix World;
-		Matrix WorldInvTranspose;
-		Matrix WorldViewProj;
-		Matrix Tex;
-		Material Material;
+
 	};
 
 	struct CBPerFrame
 	{
-		DirectionLight DirLight[3];
-		Vector3 EyePosW;
-		int LigthCount;
-		Vector4 FogColor;
-		float FogStart;
-		float FogRange;
-		bool bUseTexutre;
-		bool unused1[7];
+
+	};
+
+	struct Object
+	{
+
 	};
 
 	class D3DSample final : public D3DProcessor
 	{
 	public:
 		D3DSample(HINSTANCE hInstance, UINT width, UINT height, std::wstring name);
-		~D3DSample();
 
 		bool Init();
 		void OnResize();
@@ -64,8 +47,7 @@ namespace stenciling
 		void OnMouseMove(WPARAM btnState, int x, int y);
 
 	private:
-		void updateCBPerObject(const Matrix& worldMat, const Matrix& TexMat, const Material& material);
-
+		void drawObject(const Object& object);
 		void buildConstantBuffer();
 		void buildShader();
 		void buildInputLayout();
