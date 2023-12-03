@@ -45,7 +45,7 @@ float4 main(PS_INPUT pin) : SV_Target
     float4 texColor = float4(1, 1, 1, 1);
     if(gUseTexure)
 	{
-		float3 uvw = float3(pin.Tex, 0); //pin.PrimID % 4);
+		float3 uvw = float3(pin.Tex, pin.PrimID % 4);
 		texColor = gTreeMapArray.Sample(gSamLinearClamp, uvw);
 	
 		clip(texColor.a - 0.05f);

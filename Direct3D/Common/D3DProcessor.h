@@ -35,8 +35,6 @@ namespace common
 		inline float GetAspectRatio() const;
 		inline const WCHAR* GetTitle() const;
 
-		HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
-
 	protected:
 		void CalculateFrameStats();
 

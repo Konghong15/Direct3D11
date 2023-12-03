@@ -10,6 +10,24 @@ namespace common
 	public:
 		struct Vertex
 		{
+			Vertex() = default;
+			Vertex(const Vertex&) = default;
+			Vertex& operator=(const Vertex&) = default;
+			Vertex(DirectX::SimpleMath::Vector3 position, DirectX::SimpleMath::Vector3 normal, DirectX::SimpleMath::Vector3 tangent, DirectX::SimpleMath::Vector2 texture)
+				: Position(position)
+				, Normal(normal)
+				, TangentU(tangent)
+				, TexC(texture)
+			{
+			}
+			Vertex(float px, float py, float pz, float nx, float ny, float nz, float tanx, float tany, float tanz, float tx, float ty)
+				: Position(px, py, pz)
+				, Normal(nx, ny, nz)
+				, TangentU(tanx, tany, tanz)
+				, TexC(tx, ty)
+			{
+			}
+
 			DirectX::SimpleMath::Vector3 Position;
 			DirectX::SimpleMath::Vector3 Normal;
 			DirectX::SimpleMath::Vector3 TangentU;

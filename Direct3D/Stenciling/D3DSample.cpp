@@ -166,6 +166,8 @@ namespace stenciling
 		mCBPerFrame.FogStart = 2.f;
 		mCBPerFrame.FogRange = 40.f;
 		mCBPerFrame.bUseTexutre = true;
+		mCBPerFrame.bUseLight = true;
+		mCBPerFrame.bUseFog = true;
 		md3dContext->UpdateSubresource(mPerFrameCB, 0, NULL, &mCBPerFrame, 0, 0);
 
 		// º®ÀÌ¶û ¹Ù´Ú ÇØ°ñ ±×³É ±×¸®±â

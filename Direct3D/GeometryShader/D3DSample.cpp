@@ -120,10 +120,10 @@ namespace geometryShader
 			L"../Resource/Textures/WireFence.dds", NULL, &mBoxMapSRV));
 
 		std::vector<std::wstring> treeFilenames;
-		treeFilenames.push_back(L"../Resource/Textures/tree0.dds");
+		treeFilenames.push_back(L"../Resource/Textures/tree3.dds");
 		treeFilenames.push_back(L"../Resource/Textures/tree1.dds");
 		treeFilenames.push_back(L"../Resource/Textures/tree2.dds");
-		treeFilenames.push_back(L"../Resource/Textures/tree3.dds");
+		treeFilenames.push_back(L"../Resource/Textures/tree0.dds");
 
 		mTreeTextureMapArraySRV = D3DHelper::CreateTexture2DArraySRV(md3dDevice, md3dContext, treeFilenames);
 

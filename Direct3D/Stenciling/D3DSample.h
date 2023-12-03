@@ -44,8 +44,10 @@ namespace stenciling
 		Vector4 FogColor;
 		float FogStart;
 		float FogRange;
-		bool bUseTexutre;
-		bool unused1[7];
+		int bUseTexutre;
+		int bUseLight;
+		int bUseFog;
+		int unused1[3];
 	};
 
 	class D3DSample final : public D3DProcessor
@@ -74,6 +76,7 @@ namespace stenciling
 		void buildSkullGeometryBuffers();
 
 	private:
+
 		CBPerObject mCBPerObject;
 		CBPerFrame mCBPerFrame;
 		ID3D11Buffer* mPerObjectCB;
@@ -81,10 +84,10 @@ namespace stenciling
 
 		ID3D11VertexShader* mVertexShader;
 		ID3DBlob* mVertexShaderBlob;
+		ID3D11SamplerState* mLinearSampler;
 		ID3D11PixelShader* mPixelShader;
 		ID3D11InputLayout* mInputLayout;
-
-		ID3D11SamplerState* mLinearSampler;
+		ID3D11ComputeShader* mComputeShader;
 
 		ID3D11Buffer* mRoomVB;
 

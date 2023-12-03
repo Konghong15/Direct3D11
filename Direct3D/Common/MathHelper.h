@@ -17,15 +17,24 @@ namespace common
 		static T Max(const T& a, const T& b);
 		template <typename T>
 		static T Clamp(const T& x, const T& low, const T& high);
+		template<typename T>
+		static T Min(const T& a, const T& b);
 
 	public:
 		static constexpr float Pi = 3.1415926535f;
+		static constexpr float Infinity = FLT_MAX;
 	};
 
 	template<typename T>
 	T MathHelper::Max(const T& a, const T& b)
 	{
 		return a > b ? a : b;
+	}
+
+	template<typename T>
+	T MathHelper::Min(const T& a, const T& b)
+	{
+		return a < b ? a : b;
 	}
 
 	template <typename T>

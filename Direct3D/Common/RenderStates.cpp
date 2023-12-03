@@ -7,16 +7,21 @@ namespace common
 	ID3D11RasterizerState* RenderStates::WireFrameRS = nullptr;
 	ID3D11RasterizerState* RenderStates::NoCullRS = nullptr;
 	ID3D11RasterizerState* RenderStates::CullClockwiseRS = nullptr;
+	ID3D11RasterizerState* RenderStates::DepthRS = nullptr;
 
 	// BlendState
 	ID3D11BlendState* RenderStates::AlphaToCoverageBS = nullptr;
 	ID3D11BlendState* RenderStates::TransparentBS = nullptr;
 	ID3D11BlendState* RenderStates::NoRenderTargetWritesBS = nullptr;
+	ID3D11BlendState* RenderStates::AdditiveBlending = nullptr;
 
 	// DepthStecilState
 	ID3D11DepthStencilState* RenderStates::MarkMirrorDSS = nullptr;
 	ID3D11DepthStencilState* RenderStates::DrawReflectionDSS = nullptr;
 	ID3D11DepthStencilState* RenderStates::NoDoubleBlendDSS = nullptr;
+	ID3D11DepthStencilState* RenderStates::LessEqualDSS = nullptr;
+	ID3D11DepthStencilState* RenderStates::DisableDepthDSS = nullptr;
+	ID3D11DepthStencilState* RenderStates::NoDepthWrites = nullptr;
 
 	void RenderStates::Init(ID3D11Device* device)
 	{
@@ -48,6 +53,16 @@ namespace common
 		cullClockwiseDesc.FrontCounterClockwise = true;
 		cullClockwiseDesc.DepthClipEnable = true;
 		HR(device->CreateRasterizerState(&cullClockwiseDesc, &CullClockwiseRS));
+
+		// DepthRS
+		D3D11_RASTERIZER_DESC depthDesc;
+		ZeroMemory(&depthDesc, sizeof(D3D11_RASTERIZER_DESC));
+		depthDesc.FillMode = D3D11_FILL_SOLID;
+		depthDesc.CullMode = D3D11_CULL_BACK;
+		depthDesc.DepthBias = 100000;
+		depthDesc.DepthBiasClamp = 0.0f;
+		depthDesc.SlopeScaledDepthBias = 1.f;
+		HR(device->CreateRasterizerState(&depthDesc, &DepthRS));
 
 		// AlphaToCoverageBS
 		D3D11_BLEND_DESC alphaToCoverageDesc = { 0, };
@@ -84,6 +99,20 @@ namespace common
 		noRenderTargetWritesDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 		noRenderTargetWritesDesc.RenderTarget[0].RenderTargetWriteMask = 0; // 렌더 대상에 아무것도 쓰지 않겠다.!
 		HR(device->CreateBlendState(&noRenderTargetWritesDesc, &NoRenderTargetWritesBS));
+
+		//AdditiveBlending
+		D3D11_BLEND_DESC additiveBlendingDesc = { 0, };
+		additiveBlendingDesc.AlphaToCoverageEnable = false;
+		additiveBlendingDesc.IndependentBlendEnable = false;
+		additiveBlendingDesc.RenderTarget[0].BlendEnable = true;
+		additiveBlendingDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		additiveBlendingDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+		additiveBlendingDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		additiveBlendingDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+		additiveBlendingDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		additiveBlendingDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		additiveBlendingDesc.RenderTarget[0].RenderTargetWriteMask = 0x0F;
+		HR(device->CreateBlendState(&additiveBlendingDesc, &AdditiveBlending));
 
 		// MarkMirrorDSS
 		D3D11_DEPTH_STENCIL_DESC mirrorDesc;
@@ -138,6 +167,32 @@ namespace common
 		noDoubleBlendDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
 		noDoubleBlendDesc.BackFace.StencilFunc = D3D11_COMPARISON_EQUAL;
 		HR(device->CreateDepthStencilState(&noDoubleBlendDesc, &NoDoubleBlendDSS));
+
+		// LessEqualDSS
+		D3D11_DEPTH_STENCIL_DESC lessEqualDesc;
+		lessEqualDesc.DepthEnable = true;
+		lessEqualDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		lessEqualDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL; // 깊이 판정할 떄 같은 넘도 통과
+		lessEqualDesc.StencilEnable = false;
+
+		HR(device->CreateDepthStencilState(&lessEqualDesc, &LessEqualDSS));
+
+		// DisableDepthDSS
+		D3D11_DEPTH_STENCIL_DESC disableDepthDesc = {};
+		disableDepthDesc.DepthEnable = false;
+		disableDepthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		disableDepthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		disableDepthDesc.StencilEnable = false;
+
+		HR(device->CreateDepthStencilState(&disableDepthDesc, &DisableDepthDSS));
+
+		// NoDepthWrites
+		D3D11_DEPTH_STENCIL_DESC noDepthWritesDesc = {};
+		noDepthWritesDesc.DepthEnable = true;
+		noDepthWritesDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		noDepthWritesDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		noDepthWritesDesc.StencilEnable = false;
+		HR(device->CreateDepthStencilState(&noDepthWritesDesc, &NoDepthWrites));
 	}
 
 	void RenderStates::Destroy()
@@ -145,13 +200,18 @@ namespace common
 		ReleaseCOM(WireFrameRS);
 		ReleaseCOM(NoCullRS);
 		ReleaseCOM(CullClockwiseRS);
+		ReleaseCOM(DepthRS);
 
 		ReleaseCOM(AlphaToCoverageBS);
 		ReleaseCOM(TransparentBS);
 		ReleaseCOM(NoRenderTargetWritesBS);
+		ReleaseCOM(AdditiveBlending);
 
 		ReleaseCOM(MarkMirrorDSS);
 		ReleaseCOM(DrawReflectionDSS);
 		ReleaseCOM(NoDoubleBlendDSS);
+		ReleaseCOM(LessEqualDSS);
+		ReleaseCOM(DisableDepthDSS);
+		ReleaseCOM(NoDepthWrites);
 	}
 }
