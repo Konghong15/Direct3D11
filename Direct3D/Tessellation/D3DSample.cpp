@@ -138,7 +138,7 @@ namespace tessellation
 		md3dContext->UpdateSubresource(mPerObjectCB, 0, 0, &mCBPerObject, 0, 0);
 
 		md3dContext->RSSetState(RenderStates::WireFrameRS);
-		 md3dContext->Draw(4, 0);
+		md3dContext->Draw(4, 0);
 
 		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST);
 		md3dContext->VSSetShader(mVertexShaderBazier, 0, 0);
@@ -211,29 +211,29 @@ namespace tessellation
 	}
 	void D3DSample::buildShader()
 	{
-		HR(CompileShaderFromFile(L"VertexShader.hlsl", "main", "vs_5_0", &mVertexShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"VertexShader.hlsl", "main", "vs_5_0", &mVertexShaderBlob));
 		md3dDevice->CreateVertexShader(mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), NULL, &mVertexShader);
 
 		ID3DBlob* blob = nullptr;
-		HR(CompileShaderFromFile(L"PixelShader.hlsl", "main", "ps_5_0", &blob));
+		HR(D3DHelper::CompileShaderFromFile(L"PixelShader.hlsl", "main", "ps_5_0", &blob));
 		md3dDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), NULL, &mPixelShader);
 
-		HR(CompileShaderFromFile(L"HullShader.hlsl", "HS", "hs_5_0", &blob));
+		HR(D3DHelper::CompileShaderFromFile(L"HullShader.hlsl", "HS", "hs_5_0", &blob));
 		md3dDevice->CreateHullShader(blob->GetBufferPointer(), blob->GetBufferSize(), NULL, &mHullShader);
 
-		HR(CompileShaderFromFile(L"DomainShader.hlsl", "main", "ds_5_0", &blob));
+		HR(D3DHelper::CompileShaderFromFile(L"DomainShader.hlsl", "main", "ds_5_0", &blob));
 		md3dDevice->CreateDomainShader(blob->GetBufferPointer(), blob->GetBufferSize(), NULL, &mDomainShader);
 
-		HR(CompileShaderFromFile(L"Bazier.hlsl", "VS", "vs_5_0", &mVertexShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"Bazier.hlsl", "VS", "vs_5_0", &mVertexShaderBlob));
 		md3dDevice->CreateVertexShader(mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), NULL, &mVertexShaderBazier);
 
-		HR(CompileShaderFromFile(L"Bazier.hlsl", "PS", "ps_5_0", &blob));
+		HR(D3DHelper::CompileShaderFromFile(L"Bazier.hlsl", "PS", "ps_5_0", &blob));
 		md3dDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), NULL, &mPixelShaderBazier);
 
-		HR(CompileShaderFromFile(L"Bazier.hlsl", "HS", "hs_5_0", &blob));
+		HR(D3DHelper::CompileShaderFromFile(L"Bazier.hlsl", "HS", "hs_5_0", &blob));
 		md3dDevice->CreateHullShader(blob->GetBufferPointer(), blob->GetBufferSize(), NULL, &mHullShaderBazier);
 
-		HR(CompileShaderFromFile(L"Bazier.hlsl", "DS", "ds_5_0", &blob));
+		HR(D3DHelper::CompileShaderFromFile(L"Bazier.hlsl", "DS", "ds_5_0", &blob));
 		md3dDevice->CreateDomainShader(blob->GetBufferPointer(), blob->GetBufferSize(), NULL, &mDomainShaderBazier);
 	}
 	void D3DSample::buildInputLayout()

@@ -4,16 +4,15 @@
 
 #include "d3dUtil.h"
 #include "LightHelper.h"
+#include "Camera.h"
 
 namespace terrain
 {
-	class Camera;
-	struct DirectionLight;
-
 	using DirectX::SimpleMath::Matrix;
 	using DirectX::SimpleMath::Vector2;
 	using DirectX::SimpleMath::Vector3;
 	using DirectX::SimpleMath::Vector4;
+	using namespace common;
 
 	struct VertexTerrain
 	{
@@ -30,7 +29,7 @@ namespace terrain
 
 	struct PerFrameTerrain
 	{
-		DirectionLight DirLights[3];
+		common::DirectionLight DirLights[3];
 		Vector3 EyePosW;
 		float  FogStart;
 		Vector4 FogColor;

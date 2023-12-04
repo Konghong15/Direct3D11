@@ -34,13 +34,13 @@ namespace terrain
 
 	private:
 		Basic32* mBasic32;
-		Camera mCam;
+		common::Camera mCam;
 		POINT mLastMousePos;
 
 		Sky* mSky;
 		Terrain mTerrain;
 
-		DirectionLight mDirLights[3];
+		common::DirectionLight mDirLights[3];
 
 		bool mWalkCamMode;
 	};

@@ -19,7 +19,7 @@ namespace particleSystem
 		mLastMousePos.x = 0;
 		mLastMousePos.y = 0;
 
-		mCam.SetPosition(0.0f, 2.0f, 100.0f);
+		mCam.SetPosition(0.0f, 2.0f, -50.0f);
 
 		mDirLights[0].Ambient = Vector4(0.3f, 0.3f, 0.3f, 1.0f);
 		mDirLights[0].Diffuse = Vector4(1.0f, 1.0f, 1.0f, 1.0f);

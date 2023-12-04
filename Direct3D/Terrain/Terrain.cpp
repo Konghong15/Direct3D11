@@ -8,19 +8,20 @@
 #include "Effects.h"
 
 #include "MathHelper.h"
+#include "D3DUtil.h"
 
 namespace terrain
 {
-	Terrain::Terrain() :
-		mQuadPatchVB(0),
-		mQuadPatchIB(0),
-		mLayerMapArraySRV(0),
-		mBlendMapSRV(0),
-		mHeightMapSRV(0),
-		mNumPatchVertices(0),
-		mNumPatchQuadFaces(0),
-		mNumPatchVertRows(0),
-		mNumPatchVertCols(0)
+	Terrain::Terrain()
+		: mQuadPatchVB(0)
+		, mQuadPatchIB(0)
+		, mLayerMapArraySRV(0)
+		, mBlendMapSRV(0)
+		, mHeightMapSRV(0)
+		, mNumPatchVertices(0)
+		, mNumPatchQuadFaces(0)
+		, mNumPatchVertRows(0)
+		, mNumPatchVertCols(0)
 	{
 		mWorld = Matrix::Identity;
 
@@ -70,7 +71,7 @@ namespace terrain
 		HR(DirectX::CreateDDSTextureFromFile(device, mInfo.BlendMapFilename.c_str(), 0, &mBlendMapSRV));
 	}
 
-	void Terrain::Draw(ID3D11DeviceContext* dc, const Camera& cam, DirectionLight lights[3])
+	void Terrain::Draw(ID3D11DeviceContext* dc, const common::Camera& cam, DirectionLight lights[3])
 	{
 		dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
 		dc->IASetInputLayout(mTerrainIL);
@@ -154,6 +155,8 @@ namespace terrain
 
 	void Terrain::buildTerrain(ID3D11Device* device)
 	{
+		using namespace common;
+
 		// 입력 레이아웃
 		const D3D11_INPUT_ELEMENT_DESC inputLayoutDesc[] =
 		{
@@ -290,7 +293,7 @@ namespace terrain
 	{
 		// True if ij are valid indices; false otherwise.
 		return
-			i >= 0 && i < (int)mInfo.HeightmapHeight&&
+			i >= 0 && i < (int)mInfo.HeightmapHeight &&
 			j >= 0 && j < (int)mInfo.HeightmapWidth;
 	}
 
