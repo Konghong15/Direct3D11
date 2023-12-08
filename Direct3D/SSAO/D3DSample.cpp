@@ -186,16 +186,29 @@ namespace ssao
 		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
 		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		drawSceneToSsaoNormalDepthMap();
-		mSsao->ComputeSsao(mCam, *this);
-		mSsao->BlurAmbientMap(4, *this);
+		// drawSceneToSsaoNormalDepthMap();
+		// mSsao->ComputeSsao(mCam, *this);
+		// mSsao->BlurAmbientMap(4, *this);
 
 		ID3D11RenderTargetView* renderTargets[1] = { mRenderTargetView };
 		md3dContext->OMSetRenderTargets(1, renderTargets, mDepthStencilView);
 		md3dContext->RSSetViewports(1, &mScreenViewport);
 
 		md3dContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Silver));
-		md3dContext->OMSetDepthStencilState(RenderStates::EqualsDSS, 0);
+		// md3dContext->OMSetDepthStencilState(RenderStates::EqualsDSS, 0);
+
+		auto VS = mVSs.find("basic");
+		auto PS = mPSs.find("basic");
+		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		md3dContext->VSSetShader(VS->second, 0, 0);
+		md3dContext->PSSetShader(PS->second, 0, 0);
+
+		auto ssaoSRV = mSsao->AmbientSRV();
+		md3dContext->PSSetShaderResources(1, 1, &ssaoSRV);
+
+		auto sampler = mSamplerStates.find("linearWrap");
+		assert(sampler != mSamplerStates.end());
+		md3dContext->PSSetSamplers(0, 1, &(sampler->second));
 
 		Matrix view = mCam.GetView();
 		Matrix proj = mCam.GetProj();
@@ -203,17 +216,22 @@ namespace ssao
 
 		float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-		auto ssaoSRV = mSsao->AmbientSRV();
 
 		// 프레임버퍼 업데이트 및 바인딩   
 		memcpy(mFrameBasic.DirLights, mDirLights, sizeof(mFrameBasic.DirLights));
 		mFrameBasic.EyePosW = mCam.GetPosition();
+		memcpy(mFrameBasic.DirLights, mDirLights, sizeof(mFrameBasic.DirLights));
+		mFrameBasic.LightCount = 3;
+		mFrameBasic.FogColor = Silver;
+		mFrameBasic.FogStart = 20.f;
+		mFrameBasic.FogRange = 20.f;
+		mFrameBasic.UseTexure = true;
 
-		auto CB = mBuffers.find("");
-		assert(CB != mBuffers.end());
-		md3dContext->UpdateSubresource(CB->second, 0, 0, &mFrameBasic, 0, 0);
-
-		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		auto frameCB = mBuffers.find("CBFrameBasic");
+		assert(frameCB != mBuffers.end());
+		md3dContext->UpdateSubresource(frameCB->second, 0, 0, &mFrameBasic, 0, 0);
+		md3dContext->VSSetConstantBuffers(1, 1, &(frameCB->second));
+		md3dContext->PSSetConstantBuffers(1, 1, &(frameCB->second));
 
 		// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
 		Matrix toTexSpace(
@@ -226,7 +244,8 @@ namespace ssao
 		UINT stride = sizeof(Basic32);
 		UINT offset = 0;
 
-		auto inputLayout = mInputLayouts.find("Basic32");
+		auto inputLayout = mInputLayouts.find("basic32");
+		assert(inputLayout != mInputLayouts.end());
 		md3dContext->IASetInputLayout(inputLayout->second);
 
 		auto bindVB = [&](auto name)
@@ -263,9 +282,11 @@ namespace ssao
 				mObjectBasic.TexTransform = texTransform.Transpose();
 				mObjectBasic.Material = material;
 
-				auto CB = mBuffers.find("Basic32");
+				auto CB = mBuffers.find("CBObjectBasic");
 				assert(CB != mBuffers.end());
 				md3dContext->UpdateSubresource(CB->second, 0, 0, &mObjectBasic, 0, 0);
+				md3dContext->VSSetConstantBuffers(0, 1, &(CB->second));
+				md3dContext->PSSetConstantBuffers(0, 1, &(CB->second));
 
 				auto diffuseSRV = mSRVs.find(diffuseName);
 				if (diffuseSRV != mSRVs.end())
@@ -291,6 +312,10 @@ namespace ssao
 			updateBasic(mCylWorld[i], Matrix::CreateScale(1, 2, 1), mCylinderMat, "Brick");
 			md3dContext->DrawIndexed(mCylinderIndexCount, mCylinderIndexOffset, mCylinderVertexOffset);
 		}
+
+		mFrameBasic.UseTexure = false;
+		md3dContext->UpdateSubresource(frameCB->second, 0, 0, &mFrameBasic, 0, 0);
+		
 		// Draw the spheres.
 		for (int i = 0; i < 10; ++i)
 		{
@@ -598,7 +623,7 @@ namespace ssao
 				mPerObjectSsaoNormalDepth.WorldViewProj = worldViewProj.Transpose();
 				mPerObjectSsaoNormalDepth.TexTransform = texTransform.Transpose();
 
-				auto CB = mBuffers.find("");
+				auto CB = mBuffers.find("CBObjectSsaoNormalDepth");
 				assert(CB != mBuffers.end());
 				md3dContext->UpdateSubresource(CB->second, 0, 0, &mPerObjectSsaoNormalDepth, 0, 0);
 			};
@@ -748,7 +773,7 @@ namespace ssao
 	}
 	void D3DSample::buildSkullGeometryBuffers()
 	{
-		std::ifstream fin("Models/skull.txt");
+		std::ifstream fin("../Resource/Models/skull.txt");
 
 		if (!fin)
 		{

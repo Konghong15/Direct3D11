@@ -59,7 +59,6 @@ namespace ssao
 		void buildPS(const std::vector<std::pair<std::string, std::wstring>>& keyFileNames);
 		void buildSamplerState();
 
-
 		void drawSceneToSsaoNormalDepthMap();
 		void drawScreenQuad(ID3D11ShaderResourceView* srv);
 		void buildShapeGeometryBuffers();
