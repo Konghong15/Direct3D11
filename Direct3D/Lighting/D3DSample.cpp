@@ -168,13 +168,22 @@ namespace lighting
 		md3dContext->Unmap(mWavesModel.VertexBuffer, 0);
 
 		// Circle light over the land surface.
-		mPointLight.Position.x = 70.0f * cosf(0.2f * mTimer.GetTotalTime());
-		mPointLight.Position.z = 70.0f * sinf(0.2f * mTimer.GetTotalTime());
-		mPointLight.Position.y = 25; // MathHelper::Max(getHillHeight(mPointLight.Position.x, mPointLight.Position.z), -3.0f) + 10.0f;
+		//mPointLight.Position.x = 70.0f * cosf(0.2f * mTimer.GetTotalTime());
+		//mPointLight.Position.z = 70.0f * sinf(0.2f * mTimer.GetTotalTime());
+		//mPointLight.Position.y = 25; // MathHelper::Max(getHillHeight(mPointLight.Position.x, mPointLight.Position.z), -3.0f) + 10.0f;
 
 		mSpotLight.Position = mEyePosW;
 		mSpotLight.Direction = DirectX::SimpleMath::Vector3(target - pos);
 		mSpotLight.Direction.Normalize();
+
+		if (GetAsyncKeyState('1') & 0x8000)
+		{
+			mPointLight.Range += deltaTime * 1000;
+		}
+		else if (GetAsyncKeyState('2') & 0x8000)
+		{
+			mPointLight.Range -= deltaTime * 1000;
+		}
 	}
 
 	void D3DSample::Render()
@@ -637,7 +646,7 @@ namespace lighting
 
 	void D3DSample::buildShader()
 	{
-		HR(CompileShaderFromFile(L"../Resource/Shader/LightingVS.hlsl", "main", "vs_5_0", &mVertexShaderBuffer));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/LightingVS.hlsl", "main", "vs_5_0", &mVertexShaderBuffer));
 
 		HR(md3dDevice->CreateVertexShader(
 			mVertexShaderBuffer->GetBufferPointer(),
@@ -646,7 +655,7 @@ namespace lighting
 			&mVertexShader));
 
 		ID3DBlob* pixelShaderBuffer = nullptr;
-		HR(CompileShaderFromFile(L"../Resource/Shader/LightingPS.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/LightingPS.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
 
 		HR(md3dDevice->CreatePixelShader(
 			pixelShaderBuffer->GetBufferPointer(),

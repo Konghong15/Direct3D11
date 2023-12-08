@@ -14,30 +14,42 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Shader">
-      <UniqueIdentifier>{5cf833f3-33d8-48ee-97b0-09b4d1254107}</UniqueIdentifier>
+      <UniqueIdentifier>{3bb4aa8f-d790-48e3-a904-91f9663917db}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Octree.cpp">
+    <ClCompile Include="D3DSample.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="D3DSample.cpp">
-      <Filter>리소스 파일</Filter>
+    <ClCompile Include="Ssao.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3DSample.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Octree.h">
+    <ClInclude Include="Ssao.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantBufferStruct.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="AmbientOcclusion.hlsl">
+    <FxCompile Include="Basic.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Ssao.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="SsaoBlur.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="SsaoNormalDepth.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>

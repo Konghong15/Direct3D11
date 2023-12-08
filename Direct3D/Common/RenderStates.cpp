@@ -22,6 +22,7 @@ namespace common
 	ID3D11DepthStencilState* RenderStates::LessEqualDSS = nullptr;
 	ID3D11DepthStencilState* RenderStates::DisableDepthDSS = nullptr;
 	ID3D11DepthStencilState* RenderStates::NoDepthWrites = nullptr;
+	ID3D11DepthStencilState* RenderStates::EqualsDSS = nullptr;
 
 	void RenderStates::Init(ID3D11Device* device)
 	{
@@ -193,6 +194,14 @@ namespace common
 		noDepthWritesDesc.DepthFunc = D3D11_COMPARISON_LESS;
 		noDepthWritesDesc.StencilEnable = false;
 		HR(device->CreateDepthStencilState(&noDepthWritesDesc, &NoDepthWrites));
+
+		// EqualDSS
+		D3D11_DEPTH_STENCIL_DESC equalsDesc;
+		ZeroMemory(&equalsDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+		equalsDesc.DepthEnable = true;
+		equalsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		equalsDesc.DepthFunc = D3D11_COMPARISON_EQUAL;
+		HR(device->CreateDepthStencilState(&equalsDesc, &EqualsDSS));
 	}
 
 	void RenderStates::Destroy()
@@ -213,5 +222,6 @@ namespace common
 		ReleaseCOM(LessEqualDSS);
 		ReleaseCOM(DisableDepthDSS);
 		ReleaseCOM(NoDepthWrites);
+		ReleaseCOM(EqualsDSS);
 	}
 }

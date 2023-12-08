@@ -35,8 +35,8 @@ namespace ambientOcclusion
 
 	private:
 		BoundingBox buildAABB();
-		void buildOctree(OctreeNode* parent, const std::vector<UINT>& indices);
-		bool rayOctreeIntersect(OctreeNode* parent, Vector4 rayPos, Vector4 rayDir);
+		void buildOctreeRecursive(OctreeNode* parent, const std::vector<UINT>& indices);
+		bool rayOctreeIntersectRecursive(OctreeNode* parent, Vector4 rayPos, Vector4 rayDir);
 
 	private:
 		OctreeNode* mRoot;

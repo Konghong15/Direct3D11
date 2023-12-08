@@ -42,6 +42,7 @@ namespace ambientOcclusion
 			return false;
 		}
 
+		// 필요한 리소스를 로딩한다.
 		buildInit();
 		buildSkullGeometryBuffers();
 
@@ -189,10 +190,10 @@ namespace ambientOcclusion
 		for (UINT i = 0; i < vcount; ++i)
 			positions[i] = vertices[i].Pos;
 
+		// 옥트리 굽기
 		Octree octree;
 		octree.Build(positions, indices);
 
-		// For each vertex, count how many triangles contain the vertex.
 		std::vector<int> vertexSharedCount(vcount);
 		for (UINT i = 0; i < tcount; ++i)
 		{
@@ -209,38 +210,42 @@ namespace ambientOcclusion
 
 			XMVECTOR normal = XMVector3Normalize(XMVector3Cross(edge0, edge1));
 
-			XMVECTOR centroid = (v0 + v1 + v2) / 3.0f;
+			XMVECTOR centroid = (v0 + v1 + v2) / 3.0f; // 중점
 
-			// Offset to avoid self intersection.
+
+			// 자체 교차를 피하기위해 무게 중심에 노말로 아주 약간 움직인다.
 			centroid += 0.001f * normal;
 
 			const int NumSampleRays = 32;
 			float numUnoccluded = 0;
+
+			// 32번 노말기준으로 랜덤한 반구 벡터를 생성한다.
 			for (int j = 0; j < NumSampleRays; ++j)
 			{
 				XMVECTOR randomDir = MathHelper::RandHemisphereUnitVec3(normal);
 
-				// TODO: Technically we should not count intersections that are far 
-				// away as occluding the triangle, but this is OK for demo.
+				// 옥트리를 순회하며 반직선과 충돌되었음이 감지되면 un차페도 == 도달도를 증가시킨다.
 				if (!octree.RayOctreeIntersect(centroid, randomDir))
 				{
 					numUnoccluded++;
 				}
 			}
 
+			// 주변광 도달도는 차폐되지 않은 넘 / 샘플시도한 레이 갯수
 			float ambientAccess = numUnoccluded / NumSampleRays;
 
-			// Average with vertices that share this face.
+			// 삼각형 단위로 주변광 도달도를 누적시킨다.
 			vertices[i0].AmbientAccess += ambientAccess;
 			vertices[i1].AmbientAccess += ambientAccess;
 			vertices[i2].AmbientAccess += ambientAccess;
 
+			// 나중에 나눠줄 횟수도 누적시킨다.
 			vertexSharedCount[i0]++;
 			vertexSharedCount[i1]++;
 			vertexSharedCount[i2]++;
 		}
 
-		// Finish average by dividing by the number of samples we added.
+		// 정점별 주변광 도달도를 만든다.
 		for (UINT i = 0; i < vcount; ++i)
 		{
 			vertices[i].AmbientAccess /= vertexSharedCount[i];
@@ -285,6 +290,7 @@ namespace ambientOcclusion
 
 		fin.close();
 
+		// 정점으로 주변광 차폐 계산하기
 		buildVertexAmbientOcclusion(vertices, indices);
 
 		D3D11_BUFFER_DESC vbd;

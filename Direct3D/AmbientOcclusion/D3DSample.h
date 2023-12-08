@@ -54,7 +54,6 @@ namespace ambientOcclusion
 		ID3D11InputLayout* mInputLayout;
 		ID3D11VertexShader* mVSShader;
 		ID3D11PixelShader* mPSShader;
-		ID3D11SamplerState* mSamLinear;
 
 		ID3D11Buffer* mSkullVB;
 		ID3D11Buffer* mSkullIB;
