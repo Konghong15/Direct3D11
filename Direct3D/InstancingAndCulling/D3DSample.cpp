@@ -271,7 +271,7 @@ namespace instancingAndCulling
 
 		HR(md3dDevice->CreateSamplerState(&sampleDesc, &mLinearSampleState));
 
-		HR(CompileShaderFromFile(L"InstancedBasic.hlsl", "VS", "vs_5_0", &mVertexShaderBuffer));
+		HR(D3DHelper::CompileShaderFromFile(L"InstancedBasic.hlsl", "VS", "vs_5_0", &mVertexShaderBuffer));
 
 		HR(md3dDevice->CreateVertexShader(
 			mVertexShaderBuffer->GetBufferPointer(),
@@ -280,7 +280,7 @@ namespace instancingAndCulling
 			&mVertexShader));
 
 		ID3DBlob* pixelShaderBuffer = nullptr;
-		HR(CompileShaderFromFile(L"InstancedBasic.hlsl", "PS", "ps_5_0", &pixelShaderBuffer));
+		HR(D3DHelper::CompileShaderFromFile(L"InstancedBasic.hlsl", "PS", "ps_5_0", &pixelShaderBuffer));
 
 		HR(md3dDevice->CreatePixelShader(
 			pixelShaderBuffer->GetBufferPointer(),
@@ -391,7 +391,7 @@ namespace instancingAndCulling
 	}
 	void D3DSample::buildInstancedBuffer()
 	{
-		const int n = 5;
+		const int n = 15;
 		mInstancedData.resize(n * n * n);
 
 		float width = 200.0f;
