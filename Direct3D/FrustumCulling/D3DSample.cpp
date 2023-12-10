@@ -6,8 +6,10 @@
 #include "D3DUtil.h"
 #include "Basic32.h"
 #include "MathHelper.h"
+#include "RenderStates.h"
+#include "GeometryGenerator.h"
 
-namespace initalization
+namespace frustumCulling
 {
 	D3DSample::D3DSample(HINSTANCE hInstance, UINT width, UINT height, std::wstring name)
 		: D3DProcessor(hInstance, width, height, name)
@@ -21,6 +23,20 @@ namespace initalization
 	D3DSample::~D3DSample()
 	{
 		SafeDelete(mBasic32);
+
+		RenderStates::Destroy();
+
+		ReleaseCOM(mSkullVB);
+		ReleaseCOM(mSkullIB);
+		ReleaseCOM(mBoxIB);
+		ReleaseCOM(mBoxVB);
+
+		for (Object* object : mObjectWorlds)
+		{
+			delete object;
+		}
+
+		mObjectWorlds.clear();
 	}
 
 	bool D3DSample::Init()
@@ -30,6 +46,7 @@ namespace initalization
 			return false;
 		}
 
+		RenderStates::Init(md3dDevice);
 		initBasic32();
 		buildSkullGeometry();
 
@@ -40,12 +57,56 @@ namespace initalization
 			{
 				for (int k = 0; k < SKULL_COUNT_SQRT_3; ++k)
 				{
-					Vector3 pos = { i * INTERVAL - HALF, j * INTERVAL - HALF, (float)(k * INTERVAL) };
+					Vector3 pos = { i * INTERVAL - HALF, j * INTERVAL - HALF, k * INTERVAL - HALF };
 
-					mObjectWorlds.push_back(Matrix::CreateTranslation(pos));
+					Object* object = new Object();
+					object->World = Matrix::CreateTranslation(pos);
+					mObjectWorlds.push_back(object);
 				}
 			}
 		}
+
+		BoundingBox octreeBox({ 0,0,0 }, { HALF + INTERVAL , HALF + INTERVAL , HALF + INTERVAL });
+		mOctree.Build(octreeBox, 3, mObjectWorlds, mSkullBoundingBox);
+
+		GeometryGenerator::MeshData mesh;
+		GeometryGenerator::CreateBox(1, 1, 1, &mesh);
+
+		std::vector<Basic32::Vertex> boxVertices;
+		std::vector<UINT> boxIndecices;
+		boxVertices.reserve(36);
+
+		for (auto& vertex : mesh.Vertices)
+		{
+			Basic32::Vertex v;
+			v.Pos = vertex.Position;
+			v.Normal = vertex.Normal;
+			v.Tex = vertex.TexC;
+			boxVertices.push_back(v);
+		}
+
+		D3D11_BUFFER_DESC ibd;
+		ibd.Usage = D3D11_USAGE_IMMUTABLE;
+		ibd.ByteWidth = sizeof(UINT) * mesh.Indices.size();
+		ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		ibd.CPUAccessFlags = 0;
+		ibd.MiscFlags = 0;
+		ibd.StructureByteStride = 0;
+		D3D11_SUBRESOURCE_DATA iinitData;
+		iinitData.pSysMem = &mesh.Indices[0];
+		HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mBoxIB));
+
+		D3D11_BUFFER_DESC vbd;
+		vbd.Usage = D3D11_USAGE_IMMUTABLE;
+		vbd.ByteWidth = sizeof(Basic32::Vertex) * boxVertices.size();
+		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vbd.CPUAccessFlags = 0;
+		vbd.MiscFlags = 0;
+		vbd.StructureByteStride = 0;
+		D3D11_SUBRESOURCE_DATA vinitData;
+		vinitData.pSysMem = &boxVertices[0];
+		HR(md3dDevice->CreateBuffer(&vbd, &vinitData, &mBoxVB));
+		mbUseOctree = true;
 
 		return true;
 	}
@@ -58,22 +119,31 @@ namespace initalization
 	void D3DSample::Update(float deltaTime)
 	{
 		if (GetAsyncKeyState('W') & 0x8000)
-			mCam.TranslateLook(10.0f * deltaTime);
+			mCam.TranslateLook(100.0f * deltaTime);
 
 		if (GetAsyncKeyState('S') & 0x8000)
-			mCam.TranslateLook(-10.0f * deltaTime);
+			mCam.TranslateLook(-100.0f * deltaTime);
 
 		if (GetAsyncKeyState('A') & 0x8000)
-			mCam.TranslateRight(-10.0f * deltaTime);
+			mCam.TranslateRight(-100.0f * deltaTime);
 
 		if (GetAsyncKeyState('D') & 0x8000)
-			mCam.TranslateRight(10.0f * deltaTime);
+			mCam.TranslateRight(100.0f * deltaTime);
 
 		mCam.UpdateViewMatrix();
 
 		if (GetAsyncKeyState('1') & 0x8000)
 		{
-			mbIsOnCulling ^= true;
+			mbIsOnCulling = true;
+		}
+		if (GetAsyncKeyState('2') & 0x8000)
+		{
+			mbUseOctree = true;
+		}
+		if (GetAsyncKeyState('3') & 0x8000)
+		{
+			mbIsOnCulling = false;
+			mbUseOctree = false;
 		}
 	}
 	void D3DSample::Render()
@@ -97,36 +167,77 @@ namespace initalization
 
 		size_t renderObject = 0;
 
-		for (const Matrix& world : mObjectWorlds)
+		if (!mbUseOctree)
 		{
-			if (mbIsOnCulling)
+			for (const Object* object : mObjectWorlds)
 			{
-				Matrix WV = world * mCam.GetView();
-				BoundingFrustum Frustum(mCam.GetProj());
-				BoundingFrustum localFrustum;
-				Frustum.Transform(localFrustum, WV.Invert());
-				if (!localFrustum.Intersects(mSkullBoundingBox))
+				if (mbIsOnCulling)
 				{
-					continue;
+					Matrix WV = object->World * mCam.GetView();
+					BoundingFrustum Frustum(mCam.GetProj());
+
+					BoundingFrustum localFrustum;
+					Frustum.Transform(localFrustum, WV.Invert());
+
+					// 프러스텀의 볼륨만큼과 바운딩박스와 겹침이 있는지 판단한다.
+					if (!localFrustum.Intersects(mSkullBoundingBox))
+					{
+						continue;
+					}
 				}
+
+				auto& perObject = mBasic32->GetPerObject();
+				perObject.World = object->World.Transpose();
+				perObject.WorldInvTranspose = MathHelper::InverseTranspose(object->World).Transpose();
+				perObject.WorldViewProj = (object->World * mCam.GetViewProj()).Transpose();
+
+				mBasic32->UpdateSubresource(md3dContext);
+
+				md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
+				++renderObject;
 			}
 
-			auto& perObject = mBasic32->GetPerObject();
-			perObject.World = world.Transpose();
-			perObject.WorldInvTranspose = MathHelper::InverseTranspose(world).Transpose();
-			perObject.WorldViewProj = (world * mCam.GetViewProj()).Transpose();
-
-			mBasic32->UpdateSubresource(md3dContext);
-
-			md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
-			++renderObject;
+			std::wostringstream outs;
+			outs.precision(6);
+			outs << L"renderObject" << L"    " << renderObject <<
+				L"total Object" << mObjectWorlds.size();
+			mTitle = outs.str();
 		}
+		else
+		{
+			std::set<Object*> findObjects;
 
-		std::wostringstream outs;
-		outs.precision(6);
-		outs << L"renderObject" << L"    " << renderObject <<
-			L"total Object" << mObjectWorlds.size();
-		mTitle = outs.str();
+			Matrix view = mCam.GetView();
+			BoundingFrustum Frustum(mCam.GetProj());
+
+			BoundingFrustum worldFrustum;
+			Frustum.Transform(worldFrustum, view.Invert());
+			mOctree.FindIntersectObject(worldFrustum, &findObjects, mSkullBoundingBox);
+
+			for (const Object* object : findObjects)
+			{
+				auto& perObject = mBasic32->GetPerObject();
+				perObject.World = object->World.Transpose();
+				perObject.WorldInvTranspose = MathHelper::InverseTranspose(object->World).Transpose();
+				perObject.WorldViewProj = (object->World * mCam.GetViewProj()).Transpose();
+
+				mBasic32->UpdateSubresource(md3dContext);
+
+				md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
+			}
+
+			std::wostringstream outs;
+			outs.precision(6);
+			outs << L"renderObject" << L"    " << findObjects.size() <<
+				L"total Object" << mObjectWorlds.size();
+			mTitle = outs.str();
+
+			md3dContext->IASetIndexBuffer(mBoxIB, DXGI_FORMAT_R32_UINT, 0);
+			md3dContext->IASetVertexBuffers(0, 1, &mBoxVB, &stride, &offset);
+			md3dContext->RSSetState(RenderStates::WireFrameRS);
+			mOctree.DebugRender(md3dContext, mBasic32, mCam.GetViewProj());
+			md3dContext->RSSetState(0);
+		}
 
 		mSwapChain->Present(0, 0);
 	}

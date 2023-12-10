@@ -7,7 +7,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
 	int result = 0;
 	{
-		initalization::D3DSample sample(hInstance, 1920, 1080, L"TestApp");
+		frustumCulling::D3DSample sample(hInstance, 1920, 1080, L"TestApp");
 
 		if (!sample.Init())
 		{

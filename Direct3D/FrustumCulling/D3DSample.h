@@ -5,8 +5,10 @@
 
 #include "D3dProcessor.h"
 #include "Camera.h"
+#include "Octree.h"
+#include "Object.h"
 
-namespace initalization
+namespace frustumCulling
 {
 	class Basic32;
 
@@ -34,8 +36,8 @@ namespace initalization
 		void buildSkullGeometry();
 
 	private:
-		enum { SKULL_COUNT_SQRT_3 = 10 };
-		enum { INTERVAL = 50 };
+		enum { SKULL_COUNT_SQRT_3 = 40 };
+		enum { INTERVAL = 400 };
 
 		Basic32* mBasic32;
 		Camera mCam;
@@ -46,7 +48,12 @@ namespace initalization
 		BoundingBox mSkullBoundingBox;
 		UINT mSkullIndexCount;
 
-		std::vector<Matrix> mObjectWorlds;
+		std::vector<Object*> mObjectWorlds;
 		bool mbIsOnCulling;
+
+		Octree mOctree;
+		bool mbUseOctree;
+		ID3D11Buffer* mBoxIB;
+		ID3D11Buffer* mBoxVB;
 	};
 }

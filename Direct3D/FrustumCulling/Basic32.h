@@ -5,7 +5,7 @@
 #include "D3DUtil.h"
 #include "LightHelper.h"
 
-namespace initalization
+namespace frustumCulling
 {
 	using DirectX::SimpleMath::Matrix;
 	using DirectX::SimpleMath::Vector2;

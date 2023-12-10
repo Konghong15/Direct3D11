@@ -1,6 +1,6 @@
 #include "Basic32.h"
 
-namespace initalization
+namespace frustumCulling
 {
 	Basic32::Basic32(ID3D11Device* device, const std::wstring& filename)
 		: mPerObject{}

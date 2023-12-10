@@ -27,12 +27,21 @@
     <ClCompile Include="Bacie32.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Octree.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3DSample.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Basic32.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Octree.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

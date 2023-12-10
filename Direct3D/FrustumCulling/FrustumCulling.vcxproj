@@ -136,6 +136,7 @@
     <ClCompile Include="Bacie32.cpp" />
     <ClCompile Include="D3DSample.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Octree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
@@ -145,6 +146,8 @@
   <ItemGroup>
     <ClInclude Include="Basic32.h" />
     <ClInclude Include="D3DSample.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="Octree.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Basic.hlsl">
