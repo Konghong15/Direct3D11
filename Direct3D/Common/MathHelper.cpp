@@ -52,4 +52,23 @@ namespace common
 
 		return invResult.Transpose();
 	}
+
+	Vector4 MathHelper::RandHemisphereUnitVec3(Vector4 n)
+	{
+		Vector4 One = { 1.0f, 1.0f, 1.0f, 1.0f };
+		Vector4 Zero = Vector4::Zero;
+
+		while (true)
+		{
+			Vector4 v = { RandF(-1.0f, 1.0f), RandF(-1.0f, 1.0f), RandF(-1.0f, 1.0f), 0.0f };
+
+			if (XMVector3Greater(XMVector3LengthSq(v), One))
+				continue;
+
+			if (XMVector3Less(XMVector3Dot(n, v), Zero))
+				continue;
+
+			return XMVector3Normalize(v);
+		}
+	}
 }

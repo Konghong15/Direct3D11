@@ -5,13 +5,17 @@
 
 namespace common
 {
+	using DirectX::SimpleMath::Matrix;
+	using DirectX::SimpleMath::Vector4;
+
 	class MathHelper
 	{
 	public:
 		static float AngleFromXY(float x, float y);
 		static float RandF();
 		static float RandF(float a, float b);
-		static DirectX::SimpleMath::Matrix InverseTranspose(const DirectX::SimpleMath::Matrix& M);
+		static Matrix InverseTranspose(const Matrix& M);
+		static Vector4 RandHemisphereUnitVec3(Vector4 n);
 
 		template<typename T>
 		static T Max(const T& a, const T& b);

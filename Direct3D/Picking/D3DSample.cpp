@@ -16,7 +16,7 @@ namespace picking
 		mLastMousePos.x = 0;
 		mLastMousePos.y = 0;
 
-		mCam.SetPosition(0.0f, 2.0f, 50.0f);
+		mCam.SetPosition(0.0f, 2.0f, -50.0f);
 
 		Matrix MeshScale = Matrix::CreateScale(0.5f, 0.5f, 0.5f);
 		Matrix MeshOffset = Matrix::CreateTranslation(0.0f, 1.0f, 0);
@@ -216,7 +216,7 @@ namespace picking
 	}
 	void D3DSample::buildShader()
 	{
-		HR(CompileShaderFromFile(L"Basic.hlsl", "VS", "vs_5_0", &mVertexShaderBuffer));
+		HR(D3DHelper::CompileShaderFromFile(L"Basic.hlsl", "VS", "vs_5_0", &mVertexShaderBuffer));
 
 		HR(md3dDevice->CreateVertexShader(
 			mVertexShaderBuffer->GetBufferPointer(),
@@ -225,7 +225,7 @@ namespace picking
 			&mVertexShader));
 
 		ID3DBlob* pixelShaderBuffer = nullptr;
-		HR(CompileShaderFromFile(L"Basic.hlsl", "PS", "ps_5_0", &pixelShaderBuffer));
+		HR(D3DHelper::CompileShaderFromFile(L"Basic.hlsl", "PS", "ps_5_0", &pixelShaderBuffer));
 
 		HR(md3dDevice->CreatePixelShader(
 			pixelShaderBuffer->GetBufferPointer(),

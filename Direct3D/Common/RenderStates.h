@@ -30,5 +30,6 @@ namespace common
 		static ID3D11DepthStencilState* LessEqualDSS; // 깊이 판정/갱신 on (깊이값 같아도 통과)
 		static ID3D11DepthStencilState* DisableDepthDSS;
 		static ID3D11DepthStencilState* NoDepthWrites;
+		static ID3D11DepthStencilState* EqualsDSS;
 	};
 }

@@ -11,8 +11,8 @@ namespace terrain
 	using DirectX::SimpleMath::Vector2;
 	using DirectX::SimpleMath::Vector3;
 	using DirectX::SimpleMath::Vector4;
-	using common::Material;
 	using common::DirectionLight;
+	using namespace common;
 
 	class Basic32
 	{
@@ -28,7 +28,7 @@ namespace terrain
 
 		struct PerFrame
 		{
-			DirectionLight DirLights[3];
+			common::DirectionLight DirLights[3];
 			Vector3 EyePosW;
 			int LigthCount;
 			Vector4 FogColor;
