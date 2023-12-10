@@ -24,24 +24,23 @@ namespace ssao
 		mSceneBounds.Center = XMFLOAT3(0.0f, 0.0f, 0.0f);
 		mSceneBounds.Radius = sqrtf(10.0f * 10.0f + 15.0f * 15.0f);
 
-		Matrix I = XMMatrixIdentity();
-		XMStoreFloat4x4(&mGridWorld, I);
+		Matrix I = Matrix::Identity;
 
-		Matrix boxScale = XMMatrixScaling(3.0f, 1.0f, 3.0f);
-		Matrix boxOffset = XMMatrixTranslation(0.0f, 0.5f, 0.0f);
-		XMStoreFloat4x4(&mBoxWorld, XMMatrixMultiply(boxScale, boxOffset));
+		Matrix boxScale = Matrix::CreateScale(3.0f, 1.0f, 3.0f);
+		Matrix boxOffset = Matrix::CreateTranslation(0.0f, 0.5f, 0.0f);
+		mBoxWorld = boxScale * boxOffset;
 
-		Matrix skullScale = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-		Matrix skullOffset = XMMatrixTranslation(0.0f, 1.0f, 0.0f);
-		XMStoreFloat4x4(&mSkullWorld, XMMatrixMultiply(skullScale, skullOffset));
+		Matrix skullScale = Matrix::CreateScale(0.5f, 0.5f, 0.5f);
+		Matrix skullOffset = Matrix::CreateTranslation(0.0f, 1.0f, 0.0f);
+		mSkullWorld = skullScale * skullOffset;
 
 		for (int i = 0; i < 5; ++i)
 		{
-			XMStoreFloat4x4(&mCylWorld[i * 2 + 0], XMMatrixTranslation(-5.0f, 1.5f, -10.0f + i * 5.0f));
-			XMStoreFloat4x4(&mCylWorld[i * 2 + 1], XMMatrixTranslation(+5.0f, 1.5f, -10.0f + i * 5.0f));
+			mCylWorld[i * 2 + 0] = Matrix::CreateTranslation(-5.0f, 1.5f, -10.0f + i * 5.0f);
+			mCylWorld[i * 2 + 1] = Matrix::CreateTranslation(+5.0f, 1.5f, -10.0f + i * 5.0f);
 
-			XMStoreFloat4x4(&mSphereWorld[i * 2 + 0], XMMatrixTranslation(-5.0f, 3.5f, -10.0f + i * 5.0f));
-			XMStoreFloat4x4(&mSphereWorld[i * 2 + 1], XMMatrixTranslation(+5.0f, 3.5f, -10.0f + i * 5.0f));
+			mSphereWorld[i * 2 + 0] = Matrix::CreateTranslation(-5.0f, 3.5f, -10.0f + i * 5.0f);
+			mSphereWorld[i * 2 + 1] = Matrix::CreateTranslation(+5.0f, 3.5f, -10.0f + i * 5.0f);
 		}
 
 		mDirLights[0].Ambient = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -100,13 +99,13 @@ namespace ssao
 		SafeDelete(mSsao);
 
 		auto releaseMap = [](auto& map)
+		{
+			for (auto& pair : map)
 			{
-				for (auto& pair : map)
-				{
-					ReleaseCOM(pair.second);
-				}
-				map.clear();
-			};
+				ReleaseCOM(pair.second);
+			}
+			map.clear();
+		};
 
 		releaseMap(mBuffers);
 		releaseMap(mSRVs);
@@ -131,6 +130,13 @@ namespace ssao
 
 		mCam.SetLens(0.25f * MathHelper::Pi, GetAspectRatio(), 1.0f, 1000.0f);
 		mSsao = new Ssao(md3dDevice, md3dContext, mWidth, mHeight, mCam.GetFovY(), mCam.GetFarZ());
+
+		ID3D11ShaderResourceView* SRV;
+		DirectX::CreateDDSTextureFromFile(md3dDevice, L"../Resource/Textures/floor.dds", NULL, &SRV);
+		mSRVs.insert({ "floor" , SRV });
+		DirectX::CreateDDSTextureFromFile(md3dDevice, L"../Resource/Textures/bricks.dds", NULL, &SRV);
+		mSRVs.insert({ "brick" , SRV });
+
 
 		buildShapeGeometryBuffers();
 		buildSkullGeometryBuffers();
@@ -186,9 +192,9 @@ namespace ssao
 		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
 		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		// drawSceneToSsaoNormalDepthMap();
-		// mSsao->ComputeSsao(mCam, *this);
-		// mSsao->BlurAmbientMap(4, *this);
+		 drawSceneToSsaoNormalDepthMap();
+		 mSsao->ComputeSsao(mCam, *this);
+		 mSsao->BlurAmbientMap(4, *this);
 
 		ID3D11RenderTargetView* renderTargets[1] = { mRenderTargetView };
 		md3dContext->OMSetRenderTargets(1, renderTargets, mDepthStencilView);
@@ -249,73 +255,76 @@ namespace ssao
 		md3dContext->IASetInputLayout(inputLayout->second);
 
 		auto bindVB = [&](auto name)
+		{
+			auto VB = mBuffers.find(name);
+			if (VB != mBuffers.end())
 			{
-				auto VB = mBuffers.find(name);
-				if (VB != mBuffers.end())
-				{
-					md3dContext->IASetVertexBuffers(0, 1, &(VB->second), &stride, &offset);
-				}
-			};
+				md3dContext->IASetVertexBuffers(0, 1, &(VB->second), &stride, &offset);
+			}
+		};
 
 		auto bindIB = [&](auto name)
+		{
+			auto IB = mBuffers.find(name);
+			if (IB != mBuffers.end())
 			{
-				auto IB = mBuffers.find(name);
-				if (IB != mBuffers.end())
-				{
-					md3dContext->IASetIndexBuffer(IB->second, DXGI_FORMAT_R32_UINT, 0);
-				}
-			};
+				md3dContext->IASetIndexBuffer(IB->second, DXGI_FORMAT_R32_UINT, 0);
+			}
+		};
 
 		if (GetAsyncKeyState('1') & 0x8000)
 			md3dContext->RSSetState(RenderStates::WireFrameRS);
 
 		auto updateBasic = [&](auto w, auto texTransform, auto material, auto diffuseName)
+		{
+			Matrix world = w;
+			Matrix worldInvTranspose = MathHelper::InverseTranspose(w);
+			Matrix worldViewProj = w * view * proj;
+
+			mObjectBasic.World = world.Transpose();
+			mObjectBasic.WorldInvTranspose = worldInvTranspose.Transpose();
+			mObjectBasic.WorldViewProj = worldViewProj.Transpose();
+			mObjectBasic.WorldViewProjTex = (worldViewProj * toTexSpace).Transpose();
+			mObjectBasic.TexTransform = texTransform.Transpose();
+			mObjectBasic.Material = material;
+
+			auto CB = mBuffers.find("CBObjectBasic");
+			assert(CB != mBuffers.end());
+			md3dContext->UpdateSubresource(CB->second, 0, 0, &mObjectBasic, 0, 0);
+			md3dContext->VSSetConstantBuffers(0, 1, &(CB->second));
+			md3dContext->PSSetConstantBuffers(0, 1, &(CB->second));
+
+			auto diffuseSRV = mSRVs.find(diffuseName);
+			if (diffuseSRV != mSRVs.end())
 			{
-				Matrix world = w;
-				Matrix worldInvTranspose = MathHelper::InverseTranspose(w);
-				Matrix worldViewProj = w * view * proj;
-
-				mObjectBasic.World = world.Transpose();
-				mObjectBasic.WorldInvTranspose = worldInvTranspose.Transpose();
-				mObjectBasic.WorldViewProj = worldViewProj.Transpose();
-				mObjectBasic.WorldViewProjTex = (worldViewProj * toTexSpace).Transpose();
-				mObjectBasic.TexTransform = texTransform.Transpose();
-				mObjectBasic.Material = material;
-
-				auto CB = mBuffers.find("CBObjectBasic");
-				assert(CB != mBuffers.end());
-				md3dContext->UpdateSubresource(CB->second, 0, 0, &mObjectBasic, 0, 0);
-				md3dContext->VSSetConstantBuffers(0, 1, &(CB->second));
-				md3dContext->PSSetConstantBuffers(0, 1, &(CB->second));
-
-				auto diffuseSRV = mSRVs.find(diffuseName);
-				if (diffuseSRV != mSRVs.end())
-				{
-					md3dContext->PSSetShaderResources(0, 1, &(diffuseSRV->second));
-				}
-			};
+				md3dContext->PSSetShaderResources(0, 1, &(diffuseSRV->second));
+			}
+		};
 
 		bindVB("shapeVB");
 		bindIB("shapeIB");
 
+		mFrameBasic.UseTexure = true;
+		md3dContext->UpdateSubresource(frameCB->second, 0, 0, &mFrameBasic, 0, 0);
+
 		// Draw the grid.
-		updateBasic(mGridWorld, Matrix::CreateScale(8, 10, 1), mGridMat, "Stone");
+		updateBasic(mGridWorld, Matrix::CreateScale(8, 10, 1), mGridMat, "floor");
 		md3dContext->DrawIndexed(mGridIndexCount, mGridIndexOffset, mGridVertexOffset);
 
 		// Draw the box.
-		updateBasic(mBoxWorld, Matrix::CreateScale(2, 1, 1), mBoxMat, "Brick");
+		updateBasic(mBoxWorld, Matrix::CreateScale(2, 1, 1), mBoxMat, "brick");
 		md3dContext->DrawIndexed(mBoxIndexCount, mBoxIndexOffset, mBoxVertexOffset);
 
 		// Draw the cylinders.
 		for (int i = 0; i < 10; ++i)
 		{
-			updateBasic(mCylWorld[i], Matrix::CreateScale(1, 2, 1), mCylinderMat, "Brick");
+			updateBasic(mCylWorld[i], Matrix::CreateScale(1, 2, 1), mCylinderMat, "brick");
 			md3dContext->DrawIndexed(mCylinderIndexCount, mCylinderIndexOffset, mCylinderVertexOffset);
 		}
 
 		mFrameBasic.UseTexure = false;
 		md3dContext->UpdateSubresource(frameCB->second, 0, 0, &mFrameBasic, 0, 0);
-		
+
 		// Draw the spheres.
 		for (int i = 0; i < 10; ++i)
 		{
@@ -593,40 +602,40 @@ namespace ssao
 
 		// ssaoNormalDepth shaderbind
 		auto bindVB = [&](auto name)
+		{
+			auto VB = mBuffers.find(name);
+			if (VB != mBuffers.end())
 			{
-				auto VB = mBuffers.find(name);
-				if (VB != mBuffers.end())
-				{
-					md3dContext->IASetVertexBuffers(0, 1, &(VB->second), &stride, &offset);
-				}
-			};
+				md3dContext->IASetVertexBuffers(0, 1, &(VB->second), &stride, &offset);
+			}
+		};
 
 		auto bindIB = [&](auto name)
+		{
+			auto IB = mBuffers.find(name);
+			if (IB != mBuffers.end())
 			{
-				auto IB = mBuffers.find(name);
-				if (IB != mBuffers.end())
-				{
-					md3dContext->IASetIndexBuffer(IB->second, DXGI_FORMAT_R32_UINT, 0);
-				}
-			};
+				md3dContext->IASetIndexBuffer(IB->second, DXGI_FORMAT_R32_UINT, 0);
+			}
+		};
 
 		auto updateSsaoNormalDepth = [&](auto w, auto texTransform)
-			{
-				Matrix world = w;
-				Matrix worldInvTranspose = MathHelper::InverseTranspose(world);
-				Matrix worldView = world * view;
-				Matrix worldInvTransposeView = worldInvTranspose * view;
-				Matrix worldViewProj = world * view * proj;
+		{
+			Matrix world = w;
+			Matrix worldInvTranspose = MathHelper::InverseTranspose(world);
+			Matrix worldView = world * view;
+			Matrix worldInvTransposeView = worldInvTranspose * view;
+			Matrix worldViewProj = world * view * proj;
 
-				mPerObjectSsaoNormalDepth.WorldView = worldView.Transpose();
-				mPerObjectSsaoNormalDepth.WorldInvTransposeView = worldInvTransposeView.Transpose();
-				mPerObjectSsaoNormalDepth.WorldViewProj = worldViewProj.Transpose();
-				mPerObjectSsaoNormalDepth.TexTransform = texTransform.Transpose();
+			mPerObjectSsaoNormalDepth.WorldView = worldView.Transpose();
+			mPerObjectSsaoNormalDepth.WorldInvTransposeView = worldInvTransposeView.Transpose();
+			mPerObjectSsaoNormalDepth.WorldViewProj = worldViewProj.Transpose();
+			mPerObjectSsaoNormalDepth.TexTransform = texTransform.Transpose();
 
-				auto CB = mBuffers.find("CBObjectSsaoNormalDepth");
-				assert(CB != mBuffers.end());
-				md3dContext->UpdateSubresource(CB->second, 0, 0, &mPerObjectSsaoNormalDepth, 0, 0);
-			};
+			auto CB = mBuffers.find("CBObjectSsaoNormalDepth");
+			assert(CB != mBuffers.end());
+			md3dContext->UpdateSubresource(CB->second, 0, 0, &mPerObjectSsaoNormalDepth, 0, 0);
+		};
 
 		//
 		// Draw the grid, cylinders, spheres and box.
@@ -738,6 +747,7 @@ namespace ssao
 		{
 			vertices[k].Pos = cylinder.Vertices[i].Position;
 			vertices[k].Normal = cylinder.Vertices[i].Normal;
+			vertices[k].Normal.Normalize();
 			vertices[k].Tex = cylinder.Vertices[i].TexC;
 		}
 

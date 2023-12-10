@@ -26,9 +26,9 @@ namespace ssao
 
 	struct Basic32
 	{
-		XMFLOAT3 Pos;
-		XMFLOAT3 Normal;
-		XMFLOAT2 Tex;
+		Vector3 Pos;
+		Vector3 Normal;
+		Vector2 Tex;
 	};
 
 	class Ssao;
