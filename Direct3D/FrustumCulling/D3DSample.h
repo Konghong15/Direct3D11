@@ -48,7 +48,7 @@ namespace frustumCulling
 		BoundingBox mSkullBoundingBox;
 		UINT mSkullIndexCount;
 
-		std::vector<Object*> mObjectWorlds;
+		std::vector<Object*> mObjects;
 		bool mbIsOnCulling;
 
 		Octree mOctree;

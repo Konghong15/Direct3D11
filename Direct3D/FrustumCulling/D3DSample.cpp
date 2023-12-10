@@ -31,12 +31,12 @@ namespace frustumCulling
 		ReleaseCOM(mBoxIB);
 		ReleaseCOM(mBoxVB);
 
-		for (Object* object : mObjectWorlds)
+		for (Object* object : mObjects)
 		{
 			delete object;
 		}
 
-		mObjectWorlds.clear();
+		mObjects.clear();
 	}
 
 	bool D3DSample::Init()
@@ -61,13 +61,13 @@ namespace frustumCulling
 
 					Object* object = new Object();
 					object->World = Matrix::CreateTranslation(pos);
-					mObjectWorlds.push_back(object);
+					mObjects.push_back(object);
 				}
 			}
 		}
 
 		BoundingBox octreeBox({ 0,0,0 }, { HALF + INTERVAL , HALF + INTERVAL , HALF + INTERVAL });
-		mOctree.Build(octreeBox, 3, mObjectWorlds, mSkullBoundingBox);
+		mOctree.Build(octreeBox, 3, mObjects, mSkullBoundingBox);
 
 		GeometryGenerator::MeshData mesh;
 		GeometryGenerator::CreateBox(1, 1, 1, &mesh);
@@ -169,23 +169,22 @@ namespace frustumCulling
 
 		if (!mbUseOctree)
 		{
-			for (const Object* object : mObjectWorlds)
+			for (const Object* object : mObjects)
 			{
 				if (mbIsOnCulling)
 				{
 					Matrix WV = object->World * mCam.GetView();
-					BoundingFrustum Frustum(mCam.GetProj());
-
+					BoundingFrustum Frustum(mCam.GetProj()); // 투영 행렬로 프러스텀 생성
 					BoundingFrustum localFrustum;
-					Frustum.Transform(localFrustum, WV.Invert());
+					Frustum.Transform(localFrustum, WV.Invert()); // 월드 * 뷰의 역행렬로 로컬 공간으로 프로스텀 변환
 
-					// 프러스텀의 볼륨만큼과 바운딩박스와 겹침이 있는지 판단한다.
-					if (!localFrustum.Intersects(mSkullBoundingBox))
+					if (!localFrustum.Intersects(mSkullBoundingBox)) // 로컬 공간의 바운딩 볼륨과 프러스텀 충돌 판정
 					{
 						continue;
 					}
 				}
 
+				// 오브젝트 그리기
 				auto& perObject = mBasic32->GetPerObject();
 				perObject.World = object->World.Transpose();
 				perObject.WorldInvTranspose = MathHelper::InverseTranspose(object->World).Transpose();
@@ -200,7 +199,7 @@ namespace frustumCulling
 			std::wostringstream outs;
 			outs.precision(6);
 			outs << L"renderObject" << L"    " << renderObject <<
-				L"total Object" << mObjectWorlds.size();
+				L"total Object" << mObjects.size();
 			mTitle = outs.str();
 		}
 		else
@@ -229,7 +228,7 @@ namespace frustumCulling
 			std::wostringstream outs;
 			outs.precision(6);
 			outs << L"renderObject" << L"    " << findObjects.size() <<
-				L"total Object" << mObjectWorlds.size();
+				L"total Object" << mObjects.size();
 			mTitle = outs.str();
 
 			md3dContext->IASetIndexBuffer(mBoxIB, DXGI_FORMAT_R32_UINT, 0);
