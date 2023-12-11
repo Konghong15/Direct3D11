@@ -88,7 +88,7 @@ float4 PS(VertexOut pin) : SV_Target
 			ComputeDirectionLight(gMaterial, gDirLights[i], pin.NormalW, toEye, A, D, S);
 
 			ambient += ambientAccess*A;    
-			diffuse += D;
+			diffuse += ambientAccess*D;
 			spec    += S;
 		}
 

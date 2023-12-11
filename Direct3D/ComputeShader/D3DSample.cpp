@@ -23,7 +23,7 @@ namespace computeShader
 		ReleaseCOM(mInputASRV);
 		ReleaseCOM(mInputBSRV);
 		ReleaseCOM(mOutputUAV);
-		
+
 		ReleaseCOM(mComputeShader);
 
 		RenderStates::Destroy();
@@ -111,7 +111,7 @@ namespace computeShader
 	void D3DSample::buildShader()
 	{
 		ID3DBlob* computeShaderBlob = nullptr;
-		HR(CompileShaderFromFile(L"../Resource/Shader/VecAddCS.hlsl", "main", "cs_5_0", &computeShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/VecAddCS.hlsl", "main", "cs_5_0", &computeShaderBlob));
 		md3dDevice->CreateComputeShader(computeShaderBlob->GetBufferPointer()
 			, computeShaderBlob->GetBufferSize()
 			, NULL

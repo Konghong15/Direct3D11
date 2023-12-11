@@ -302,18 +302,18 @@ namespace computeShaderBlur
 
 		md3dDevice->CreateSamplerState(&samplerDesc, &mLinearSampler);
 
-		HR(CompileShaderFromFile(L"../Resource/Shader/StencilingVS.hlsl", "main", "vs_5_0", &mVertexShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/StencilingVS.hlsl", "main", "vs_5_0", &mVertexShaderBlob));
 		md3dDevice->CreateVertexShader(mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), NULL, &mVertexShader);
 
 		ID3DBlob* pixelShaderBlob = nullptr;
-		HR(CompileShaderFromFile(L"../Resource/Shader/StencilingPS.hlsl", "main", "ps_5_0", &pixelShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/StencilingPS.hlsl", "main", "ps_5_0", &pixelShaderBlob));
 		md3dDevice->CreatePixelShader(pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize(), NULL, &mPixelShader);
 
 		ID3DBlob* computeShaderBlob = nullptr;
-		HR(CompileShaderFromFile(L"BlurCS.hlsl", "HorzBlurCS", "cs_5_0", &computeShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"BlurCS.hlsl", "HorzBlurCS", "cs_5_0", &computeShaderBlob));
 		md3dDevice->CreateComputeShader(computeShaderBlob->GetBufferPointer(), computeShaderBlob->GetBufferSize(), NULL, &mComputeShaderH);
 
-		HR(CompileShaderFromFile(L"BlurCS.hlsl", "VertBlurCS", "cs_5_0", &computeShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"BlurCS.hlsl", "VertBlurCS", "cs_5_0", &computeShaderBlob));
 		md3dDevice->CreateComputeShader(computeShaderBlob->GetBufferPointer(), computeShaderBlob->GetBufferSize(), NULL, &mComputeShaderV);
 	}
 	void D3DSample::buildInputLayout()

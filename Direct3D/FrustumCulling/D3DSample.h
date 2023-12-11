@@ -37,7 +37,7 @@ namespace frustumCulling
 
 	private:
 		enum { SKULL_COUNT_SQRT_3 = 40 };
-		enum { INTERVAL = 400 };
+		enum { INTERVAL = 100 };
 
 		Basic32* mBasic32;
 		Camera mCam;

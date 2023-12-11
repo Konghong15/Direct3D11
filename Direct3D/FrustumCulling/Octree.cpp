@@ -109,6 +109,10 @@ namespace frustumCulling
 		{
 			return;
 		}
+		if (node->Objects.size() == 0)
+		{
+			return;
+		}
 
 		Matrix traslate = Matrix::CreateTranslation(node->Bounds.Center);
 		Matrix scale = Matrix::CreateScale(abs(node->Bounds.Extents.x * 2));

@@ -1,3 +1,5 @@
+// 장면의 물체들의 법선과 깊이를 렌더링한다.
+
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorldView;
@@ -39,8 +41,8 @@ VertexOut VS(VertexIn vin)
 float4 PS(VertexOut pin) : SV_Target
 {
     pin.NormalV = normalize(pin.NormalV);
-	float4 texColor = gDiffuseMap.Sample( samLinear, pin.Tex );
-	clip(texColor.a - 0.1f);
+	// float4 texColor = gDiffuseMap.Sample( samLinear, pin.Tex );
+	// clip(texColor.a - 0.1f);
 	
 	return float4(pin.NormalV, pin.PosV.z);
 }

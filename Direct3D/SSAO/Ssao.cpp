@@ -1,4 +1,5 @@
 #include <vector>
+#include <cassert>
 
 #include "Ssao.h"
 #include "Camera.h"
@@ -32,6 +33,12 @@ namespace ssao
 		ReleaseCOM(mScreenQuadVB);
 		ReleaseCOM(mScreenQuadIB);
 		ReleaseCOM(mRandomVectorSRV);
+		ReleaseCOM(mNormalDepthRTV);
+		ReleaseCOM(mNormalDepthSRV);
+		ReleaseCOM(mAmbientRTV0);
+		ReleaseCOM(mAmbientSRV0);
+		ReleaseCOM(mAmbientRTV1);
+		ReleaseCOM(mAmbientSRV1);
 
 		ReleaseTextureViews();
 	}
@@ -75,13 +82,29 @@ namespace ssao
 
 	void Ssao::ComputeSsao(const Camera& camera, D3DSample& sample)
 	{
-		// Bind the ambient map as the render target.  Observe that this pass does not bind 
-		// a depth/stencil buffer--it does not need it, and without one, no depth test is
-		// performed, which is what we want.
+		// ·»´õ Å¸°Ù°ú ºäÆ÷Æ® ¼³Á¤
 		ID3D11RenderTargetView* renderTargets[1] = { mAmbientRTV0 };
 		mDC->OMSetRenderTargets(1, renderTargets, 0);
 		mDC->ClearRenderTargetView(mAmbientRTV0, reinterpret_cast<const float*>(&Black));
 		mDC->RSSetViewports(1, &mAmbientMapViewport);
+
+		// ÀÚ¿ø ¹ÙÀÎµù
+		auto VS = sample.mVSs.find("ssao");
+		assert(VS != sample.mVSs.end());
+		mDC->VSSetShader(VS->second, 0, 0);
+		auto PS = sample.mPSs.find("ssao");
+		assert(PS != sample.mPSs.end());
+		mDC->PSSetShader(PS->second, 0, 0);
+		auto CB0 = sample.mBuffers.find("CBFrameSsao");
+		assert(CB0 != sample.mBuffers.end());
+		mDC->VSSetConstantBuffers(0, 1, &(CB0->second));
+		mDC->PSSetConstantBuffers(0, 1, &(CB0->second));
+		auto SS0 = sample.mSamplerStates.find("pointBorder");
+		auto SS1 = sample.mSamplerStates.find("linearWrap");
+		assert(SS0 != sample.mSamplerStates.end());
+		assert(SS1 != sample.mSamplerStates.end());
+		mDC->PSSetSamplers(0, 1, &(SS0->second));
+		mDC->PSSetSamplers(1, 1, &(SS1->second));
 
 		// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
 		static const Matrix T(
@@ -96,9 +119,10 @@ namespace ssao
 		sample.mFrameSsao.ViewToTexSpace = PT.Transpose();
 		memcpy(sample.mFrameSsao.OffsetVectors, mOffsets, sizeof(sample.mFrameSsao.OffsetVectors));
 		memcpy(sample.mFrameSsao.FrustumCorners, mFrustumFarCorner, sizeof(sample.mFrameSsao.FrustumCorners));
+		mDC->UpdateSubresource(CB0->second, 0, 0, &(sample.mFrameSsao), 0, 0);
 
 		sample.md3dContext->PSSetShaderResources(0, 1, &mNormalDepthSRV);
-		sample.md3dContext->PSSetShaderResources(0, 1, &mRandomVectorSRV);
+		sample.md3dContext->PSSetShaderResources(1, 1, &mRandomVectorSRV);
 
 		UINT stride = sizeof(Basic32);
 		UINT offset = 0;
@@ -129,10 +153,27 @@ namespace ssao
 		mDC->ClearRenderTargetView(outputRTV, reinterpret_cast<const float*>(&Black));
 		mDC->RSSetViewports(1, &mAmbientMapViewport);
 
+		auto VS = sample.mVSs.find("ssaoBlur");
+		assert(VS != sample.mVSs.end());
+		mDC->VSSetShader(VS->second, 0, 0);
+		auto PS = sample.mPSs.find("ssaoBlur");
+		assert(PS != sample.mPSs.end());
+		mDC->PSSetShader(PS->second, 0, 0);
+		auto CB0 = sample.mBuffers.find("CBFrameSsaoBlur");
+		assert(CB0 != sample.mBuffers.end());
+		mDC->VSSetConstantBuffers(0, 1, &(CB0->second));
+		mDC->PSSetConstantBuffers(0, 1, &(CB0->second));
+		auto SS0 = sample.mSamplerStates.find("linearWrap");
+		assert(SS0 != sample.mSamplerStates.end());
+		mDC->PSSetSamplers(0, 1, &(SS0->second));
+
 		sample.mFrameSsaoBlur.TexelWidth = 1.f / mAmbientMapViewport.Width;
 		sample.mFrameSsaoBlur.TexelHeight = 1.f / mAmbientMapViewport.Height;
+		sample.mFrameSsaoBlur.bHorizontalBlur = horzBlur;
+		mDC->UpdateSubresource(CB0->second, 0, 0, &(sample.mFrameSsaoBlur), 0, 0);
+
 		sample.md3dContext->PSSetShaderResources(0, 1, &mNormalDepthSRV);
-		sample.md3dContext->PSSetShaderResources(0, 1, &inputSRV);
+		sample.md3dContext->PSSetShaderResources(1, 1, &inputSRV);
 
 		UINT stride = sizeof(Basic32);
 		UINT offset = 0;
@@ -143,6 +184,9 @@ namespace ssao
 		mDC->IASetVertexBuffers(0, 1, &mScreenQuadVB, &stride, &offset);
 		mDC->IASetIndexBuffer(mScreenQuadIB, DXGI_FORMAT_R16_UINT, 0);
 		mDC->DrawIndexed(6, 0, 0);
+
+		ID3D11ShaderResourceView* nullSRV = { nullptr };
+		sample.md3dContext->PSSetShaderResources(1, 1, &nullSRV);
 	}
 
 	void Ssao::BuildFrustumFarCorners(float fovy, float farZ)

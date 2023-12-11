@@ -60,7 +60,6 @@ namespace ssao
 		void buildSamplerState();
 
 		void drawSceneToSsaoNormalDepthMap();
-		void drawScreenQuad(ID3D11ShaderResourceView* srv);
 		void buildShapeGeometryBuffers();
 		void buildSkullGeometryBuffers();
 		void buildScreenQuadGeometryBuffers();

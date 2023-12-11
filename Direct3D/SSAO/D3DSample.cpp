@@ -99,13 +99,13 @@ namespace ssao
 		SafeDelete(mSsao);
 
 		auto releaseMap = [](auto& map)
-		{
-			for (auto& pair : map)
 			{
-				ReleaseCOM(pair.second);
-			}
-			map.clear();
-		};
+				for (auto& pair : map)
+				{
+					ReleaseCOM(pair.second);
+				}
+				map.clear();
+			};
 
 		releaseMap(mBuffers);
 		releaseMap(mSRVs);
@@ -113,6 +113,7 @@ namespace ssao
 		releaseMap(mVSs);
 		releaseMap(mPSs);
 		releaseMap(mSamplerStates);
+		releaseMap(mBlobs);
 
 		RenderStates::Destroy();
 	}
@@ -136,7 +137,6 @@ namespace ssao
 		mSRVs.insert({ "floor" , SRV });
 		DirectX::CreateDDSTextureFromFile(md3dDevice, L"../Resource/Textures/bricks.dds", NULL, &SRV);
 		mSRVs.insert({ "brick" , SRV });
-
 
 		buildShapeGeometryBuffers();
 		buildSkullGeometryBuffers();
@@ -187,41 +187,54 @@ namespace ssao
 		assert(md3dContext);
 		assert(mSwapChain);
 
-		float color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		UINT stride = sizeof(Basic32);
+		UINT offset = 0;
+		auto inputLayout = mInputLayouts.find("basic32");
+		assert(inputLayout != mInputLayouts.end());
+		md3dContext->IASetInputLayout(inputLayout->second);
 
+		float color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
 		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
 		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		 drawSceneToSsaoNormalDepthMap();
-		 mSsao->ComputeSsao(mCam, *this);
-		 mSsao->BlurAmbientMap(4, *this);
+		if (GetAsyncKeyState('1') & 0x8000)
+		{
+			// 노말/깊이 맵을 렌더 대상 뷰로 바인딩한다.
+			mSsao->SetNormalDepthRenderTarget(mDepthStencilView);
 
+			// 장면의 노말과 깊이값을 그린다.
+			drawSceneToSsaoNormalDepthMap();
+
+			// 차폐도를 계산한다.
+			mSsao->ComputeSsao(mCam, *this);
+			mSsao->BlurAmbientMap(4, *this);
+			md3dContext->OMSetDepthStencilState(RenderStates::EqualsDSS, 0);
+
+		}
 		ID3D11RenderTargetView* renderTargets[1] = { mRenderTargetView };
 		md3dContext->OMSetRenderTargets(1, renderTargets, mDepthStencilView);
 		md3dContext->RSSetViewports(1, &mScreenViewport);
 
 		md3dContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Silver));
-		// md3dContext->OMSetDepthStencilState(RenderStates::EqualsDSS, 0);
 
 		auto VS = mVSs.find("basic");
 		auto PS = mPSs.find("basic");
-		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		assert(VS != mVSs.end());
+		assert(PS != mPSs.end());
+
 		md3dContext->VSSetShader(VS->second, 0, 0);
 		md3dContext->PSSetShader(PS->second, 0, 0);
 
+
+		// ssao 맵 바인딩
 		auto ssaoSRV = mSsao->AmbientSRV();
 		md3dContext->PSSetShaderResources(1, 1, &ssaoSRV);
 
+		// 샘플러 스테이트 바인딩
 		auto sampler = mSamplerStates.find("linearWrap");
 		assert(sampler != mSamplerStates.end());
 		md3dContext->PSSetSamplers(0, 1, &(sampler->second));
-
-		Matrix view = mCam.GetView();
-		Matrix proj = mCam.GetProj();
-		Matrix viewProj = mCam.GetViewProj();
-
-		float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
 
 		// 프레임버퍼 업데이트 및 바인딩   
 		memcpy(mFrameBasic.DirLights, mDirLights, sizeof(mFrameBasic.DirLights));
@@ -233,132 +246,130 @@ namespace ssao
 		mFrameBasic.FogRange = 20.f;
 		mFrameBasic.UseTexure = true;
 
+		// basic32 상수 버퍼 바인딩
+		auto objectCB = mBuffers.find("CBObjectBasic");
+		assert(objectCB != mBuffers.end());
+		md3dContext->VSSetConstantBuffers(0, 1, &(objectCB->second));
+		md3dContext->PSSetConstantBuffers(0, 1, &(objectCB->second));
 		auto frameCB = mBuffers.find("CBFrameBasic");
 		assert(frameCB != mBuffers.end());
 		md3dContext->UpdateSubresource(frameCB->second, 0, 0, &mFrameBasic, 0, 0);
 		md3dContext->VSSetConstantBuffers(1, 1, &(frameCB->second));
 		md3dContext->PSSetConstantBuffers(1, 1, &(frameCB->second));
 
-		// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
+		// 자주 쓰이는 변수들
+		Matrix view = mCam.GetView();
+		Matrix proj = mCam.GetProj();
+		Matrix viewProj = mCam.GetViewProj();
+
+		float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
 		Matrix toTexSpace(
 			0.5f, 0.0f, 0.0f, 0.0f,
 			0.0f, -0.5f, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.5f, 0.5f, 0.0f, 1.0f);
-		// Draw the grid, cylinders, and box without any cubemap reflection.
 
-		UINT stride = sizeof(Basic32);
-		UINT offset = 0;
-
-		auto inputLayout = mInputLayouts.find("basic32");
-		assert(inputLayout != mInputLayouts.end());
-		md3dContext->IASetInputLayout(inputLayout->second);
-
+		// 람다 함수 정의
 		auto bindVB = [&](auto name)
-		{
-			auto VB = mBuffers.find(name);
-			if (VB != mBuffers.end())
 			{
-				md3dContext->IASetVertexBuffers(0, 1, &(VB->second), &stride, &offset);
-			}
-		};
-
+				auto VB = mBuffers.find(name);
+				if (VB != mBuffers.end())
+				{
+					md3dContext->IASetVertexBuffers(0, 1, &(VB->second), &stride, &offset);
+				}
+			};
 		auto bindIB = [&](auto name)
-		{
-			auto IB = mBuffers.find(name);
-			if (IB != mBuffers.end())
 			{
-				md3dContext->IASetIndexBuffer(IB->second, DXGI_FORMAT_R32_UINT, 0);
-			}
-		};
-
-		if (GetAsyncKeyState('1') & 0x8000)
-			md3dContext->RSSetState(RenderStates::WireFrameRS);
-
+				auto IB = mBuffers.find(name);
+				if (IB != mBuffers.end())
+				{
+					md3dContext->IASetIndexBuffer(IB->second, DXGI_FORMAT_R32_UINT, 0);
+				}
+			};
 		auto updateBasic = [&](auto w, auto texTransform, auto material, auto diffuseName)
-		{
-			Matrix world = w;
-			Matrix worldInvTranspose = MathHelper::InverseTranspose(w);
-			Matrix worldViewProj = w * view * proj;
-
-			mObjectBasic.World = world.Transpose();
-			mObjectBasic.WorldInvTranspose = worldInvTranspose.Transpose();
-			mObjectBasic.WorldViewProj = worldViewProj.Transpose();
-			mObjectBasic.WorldViewProjTex = (worldViewProj * toTexSpace).Transpose();
-			mObjectBasic.TexTransform = texTransform.Transpose();
-			mObjectBasic.Material = material;
-
-			auto CB = mBuffers.find("CBObjectBasic");
-			assert(CB != mBuffers.end());
-			md3dContext->UpdateSubresource(CB->second, 0, 0, &mObjectBasic, 0, 0);
-			md3dContext->VSSetConstantBuffers(0, 1, &(CB->second));
-			md3dContext->PSSetConstantBuffers(0, 1, &(CB->second));
-
-			auto diffuseSRV = mSRVs.find(diffuseName);
-			if (diffuseSRV != mSRVs.end())
 			{
-				md3dContext->PSSetShaderResources(0, 1, &(diffuseSRV->second));
-			}
-		};
+				Matrix world = w;
+				Matrix worldInvTranspose = MathHelper::InverseTranspose(w);
+				Matrix worldViewProj = w * view * proj;
 
+				mObjectBasic.World = world.Transpose();
+				mObjectBasic.WorldInvTranspose = worldInvTranspose.Transpose();
+				mObjectBasic.WorldViewProj = worldViewProj.Transpose();
+				mObjectBasic.WorldViewProjTex = (worldViewProj * toTexSpace).Transpose();
+				mObjectBasic.TexTransform = texTransform.Transpose();
+				mObjectBasic.Material = material;
+
+				auto objectCB = mBuffers.find("CBObjectBasic");
+				assert(objectCB != mBuffers.end());
+				md3dContext->UpdateSubresource(objectCB->second, 0, 0, &mObjectBasic, 0, 0);
+
+				auto diffuseSRV = mSRVs.find(diffuseName);
+				if (diffuseSRV != mSRVs.end())
+				{
+					md3dContext->PSSetShaderResources(0, 1, &(diffuseSRV->second));
+				}
+			};
+
+		// shape buffer 바인딩
 		bindVB("shapeVB");
 		bindIB("shapeIB");
 
+		// 텍스처 사용함
 		mFrameBasic.UseTexure = true;
 		md3dContext->UpdateSubresource(frameCB->second, 0, 0, &mFrameBasic, 0, 0);
 
-		// Draw the grid.
+		// 격자 그리기
 		updateBasic(mGridWorld, Matrix::CreateScale(8, 10, 1), mGridMat, "floor");
 		md3dContext->DrawIndexed(mGridIndexCount, mGridIndexOffset, mGridVertexOffset);
 
-		// Draw the box.
+		// 박스 그리기
 		updateBasic(mBoxWorld, Matrix::CreateScale(2, 1, 1), mBoxMat, "brick");
 		md3dContext->DrawIndexed(mBoxIndexCount, mBoxIndexOffset, mBoxVertexOffset);
 
-		// Draw the cylinders.
+		// 원기둥 그리기
 		for (int i = 0; i < 10; ++i)
 		{
 			updateBasic(mCylWorld[i], Matrix::CreateScale(1, 2, 1), mCylinderMat, "brick");
 			md3dContext->DrawIndexed(mCylinderIndexCount, mCylinderIndexOffset, mCylinderVertexOffset);
 		}
 
+		// 텍스처 사용 안함
 		mFrameBasic.UseTexure = false;
 		md3dContext->UpdateSubresource(frameCB->second, 0, 0, &mFrameBasic, 0, 0);
 
-		// Draw the spheres.
+		// 구 그리기
 		for (int i = 0; i < 10; ++i)
 		{
 			updateBasic(mSphereWorld[i], Matrix::Identity, mSphereMat, "");
 			md3dContext->DrawIndexed(mSphereIndexCount, mSphereIndexOffset, mSphereVertexOffset);
 		}
 
+		// 해골 버퍼 바인딩
 		bindVB("skullVB");
 		bindIB("skullIB");
 
-		// Draw the skull.
+		// 해골 그리기
 		updateBasic(mSkullWorld, Matrix::Identity, mSkullMat, "");
 		md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
 
-		// Restore from RenderStates::EqualsDSS
+		// 기본 깊이/스텐실 상태로 복원
 		md3dContext->OMSetDepthStencilState(0, 0);
 
-		// Debug view SSAO map.
-		bindVB("quadVB");
-		bindIB("quadIB");
-		Matrix world(
-			0.5f, 0.0f, 0.0f, 0.0f,
-			0.0f, 0.5f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.5f, -0.5f, 0.0f, 1.0f);
+		// 디버그 렌더
+		//bindVB("quadVB");
+		//bindIB("quadIB");
+		//Matrix world(
+		//	0.5f, 0.0f, 0.0f, 0.0f,
+		//	0.0f, 0.5f, 0.0f, 0.0f,
+		//	0.0f, 0.0f, 1.0f, 0.0f,
+		//	0.5f, -0.5f, 0.0f, 1.0f);
+		//md3dContext->PSSetShaderResources(0, 1, &ssaoSRV);
+
 		updateBasic(Matrix::Identity, Matrix::Identity, mSkullMat, "ssao");
 		md3dContext->DrawIndexed(6, 0, 0);
 
-		// restore default states, as the SkyFX changes them in the effect file.
-		md3dContext->RSSetState(0);
-		md3dContext->OMSetDepthStencilState(0, 0);
-
-		// Unbind shadow map and AmbientMap as a shader input because we are going to render
-		// to it next frame.  These textures can be at any slot, so clear all slots.
+		// ssao 맵에 다시 그릴 수 있게 srv 해제
 		ID3D11ShaderResourceView* nullSRV[16] = { 0 };
 		md3dContext->PSSetShaderResources(0, 16, nullSRV);
 
@@ -407,7 +418,6 @@ namespace ssao
 		buildInputLayout();
 		buildSamplerState();
 	}
-
 
 	void D3DSample::buildBuffer()
 	{
@@ -600,73 +610,86 @@ namespace ssao
 		UINT stride = sizeof(Basic32);
 		UINT offset = 0;
 
-		// ssaoNormalDepth shaderbind
+		auto VS = mVSs.find("ssaoNormalDepth");
+		assert(VS != mVSs.end());
+		md3dContext->VSSetShader(VS->second, 0, 0);
+		auto PS = mPSs.find("ssaoNormalDepth");
+		assert(PS != mPSs.end());
+		md3dContext->PSSetShader(PS->second, 0, 0);
+		auto CB0 = mBuffers.find("CBObjectSsaoNormalDepth");
+		assert(CB0 != mBuffers.end());
+		md3dContext->VSSetConstantBuffers(0, 1, &(CB0->second));
+		md3dContext->PSSetConstantBuffers(0, 1, &(CB0->second));
+		auto SS0 = mSamplerStates.find("pointBorder");
+		assert(SS0 != mSamplerStates.end());
+		md3dContext->PSSetSamplers(0, 1, &(SS0->second));
+
+		// 람다 함수 정의
 		auto bindVB = [&](auto name)
-		{
-			auto VB = mBuffers.find(name);
-			if (VB != mBuffers.end())
 			{
-				md3dContext->IASetVertexBuffers(0, 1, &(VB->second), &stride, &offset);
-			}
-		};
-
+				auto VB = mBuffers.find(name);
+				if (VB != mBuffers.end())
+				{
+					md3dContext->IASetVertexBuffers(0, 1, &(VB->second), &stride, &offset);
+				}
+			};
 		auto bindIB = [&](auto name)
-		{
-			auto IB = mBuffers.find(name);
-			if (IB != mBuffers.end())
 			{
-				md3dContext->IASetIndexBuffer(IB->second, DXGI_FORMAT_R32_UINT, 0);
-			}
-		};
-
+				auto IB = mBuffers.find(name);
+				if (IB != mBuffers.end())
+				{
+					md3dContext->IASetIndexBuffer(IB->second, DXGI_FORMAT_R32_UINT, 0);
+				}
+			};
 		auto updateSsaoNormalDepth = [&](auto w, auto texTransform)
-		{
-			Matrix world = w;
-			Matrix worldInvTranspose = MathHelper::InverseTranspose(world);
-			Matrix worldView = world * view;
-			Matrix worldInvTransposeView = worldInvTranspose * view;
-			Matrix worldViewProj = world * view * proj;
+			{
+				Matrix world = w;
+				Matrix worldInvTranspose = MathHelper::InverseTranspose(world);
+				Matrix worldView = world * view;
+				Matrix worldInvTransposeView = worldInvTranspose * view;
+				Matrix worldViewProj = world * view * proj;
 
-			mPerObjectSsaoNormalDepth.WorldView = worldView.Transpose();
-			mPerObjectSsaoNormalDepth.WorldInvTransposeView = worldInvTransposeView.Transpose();
-			mPerObjectSsaoNormalDepth.WorldViewProj = worldViewProj.Transpose();
-			mPerObjectSsaoNormalDepth.TexTransform = texTransform.Transpose();
+				mPerObjectSsaoNormalDepth.WorldView = worldView.Transpose();
+				mPerObjectSsaoNormalDepth.WorldInvTransposeView = worldInvTransposeView.Transpose();
+				mPerObjectSsaoNormalDepth.WorldViewProj = worldViewProj.Transpose();
+				mPerObjectSsaoNormalDepth.TexTransform = texTransform.Transpose();
 
-			auto CB = mBuffers.find("CBObjectSsaoNormalDepth");
-			assert(CB != mBuffers.end());
-			md3dContext->UpdateSubresource(CB->second, 0, 0, &mPerObjectSsaoNormalDepth, 0, 0);
-		};
+				auto CB = mBuffers.find("CBObjectSsaoNormalDepth");
+				assert(CB != mBuffers.end());
+				md3dContext->UpdateSubresource(CB->second, 0, 0, &mPerObjectSsaoNormalDepth, 0, 0);
+			};
 
-		//
-		// Draw the grid, cylinders, spheres and box.
+		// 쉐이프 버퍼 바인딩
 		bindVB("shapeVB");
 		bindIB("shapeIB");
 
-		// Draw the grid.
+		// 격자 그리기
 		updateSsaoNormalDepth(mGridWorld, Matrix::CreateScale(8.0f, 10.0f, 1.0f));
 		md3dContext->DrawIndexed(mGridIndexCount, mGridIndexOffset, mGridVertexOffset);
 
-		// Draw the box.
+		// 박스 그리기
 		updateSsaoNormalDepth(mBoxWorld, Matrix::CreateScale(2.0f, 1.0f, 1.0f));
 		md3dContext->DrawIndexed(mBoxIndexCount, mBoxIndexOffset, mBoxVertexOffset);
 
-		// Draw the cylinders.
+		// 원기둥 그리기
 		for (int i = 0; i < 10; ++i)
 		{
 			updateSsaoNormalDepth(mCylWorld[i], Matrix::CreateScale(1.0f, 2.0f, 1.0f));
 			md3dContext->DrawIndexed(mCylinderIndexCount, mCylinderIndexOffset, mCylinderVertexOffset);
 		}
 
-		// Draw the spheres.
+		// 원 그리기
 		for (int i = 0; i < 10; ++i)
 		{
 			updateSsaoNormalDepth(mSphereWorld[i], Matrix::Identity);
 			md3dContext->DrawIndexed(mSphereIndexCount, mSphereIndexOffset, mSphereVertexOffset);
 		}
 
-		// Draw the skull.
+		// 해골 버퍼 바인딩
 		bindVB("skullVB");
 		bindIB("skullIB");
+
+		// 해골 그리기
 		updateSsaoNormalDepth(mSkullWorld, Matrix::Identity);
 		md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
 	}

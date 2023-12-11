@@ -54,7 +54,8 @@ namespace ssao
 	{
 		float TexelWidth;
 		float TexelHeight;
-		float unused[2];
+		int bHorizontalBlur;
+		float unused[1];
 	};
 
 }

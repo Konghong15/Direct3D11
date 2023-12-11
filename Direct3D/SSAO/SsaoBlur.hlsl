@@ -2,6 +2,7 @@ cbuffer cbPerFrame : register(b0)
 {
 	float gTexelWidth;
 	float gTexelHeight;
+	bool gHorizontalBlur;
 };
 
 Texture2D gNormalDepthMap : register(t0);
@@ -37,14 +38,21 @@ VertexOut VS(VertexIn vin)
 
 float4 PS(VertexOut pin) : SV_Target
 {
+	float2 texOffset;
+	if (gHorizontalBlur)
+	{
+		texOffset = float2(gTexelWidth, 0.0f);
+	}
+	else
+	{
+		texOffset = float2(0.0f, gTexelWidth);
+	}
+
 	float gWeights[11] = 
 	{
 		0.05f, 0.05f, 0.1f, 0.1f, 0.1f, 0.2f, 0.1f, 0.1f, 0.1f, 0.05f, 0.05f
 	};
 	const int gBlurRadius = 5;
-
-	float2 texOffset;
-	texOffset = float2(gTexelWidth, 0.0f);
 
 	// The center value always contributes to the sum.
 	float4 color      = gWeights[5]*gInputImage.SampleLevel(samPoint, pin.Tex, 0.0);
