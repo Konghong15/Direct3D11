@@ -21,7 +21,7 @@ namespace lighting
 	};
 
 	struct CBPerObject
-	{
+	{  
 		DirectX::SimpleMath::Matrix World;
 		DirectX::SimpleMath::Matrix WorldInvTranspose;
 		DirectX::SimpleMath::Matrix WorldViewProj;

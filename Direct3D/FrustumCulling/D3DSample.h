@@ -36,8 +36,10 @@ namespace frustumCulling
 		void buildSkullGeometry();
 
 	private:
-		enum { SKULL_COUNT_SQRT_3 = 40 };
-		enum { INTERVAL = 100 };
+		// 10, 50 정도가 형태 보여주기에는 좋음
+		// 40, 50 정도가 최적화 보여주기에 좋음
+		enum { SKULL_COUNT_SQRT_3 = 10 };
+		enum { INTERVAL = 50 };
 
 		Basic32* mBasic32;
 		Camera mCam;

@@ -43,7 +43,7 @@ namespace ssao
 			mSphereWorld[i * 2 + 1] = Matrix::CreateTranslation(+5.0f, 3.5f, -10.0f + i * 5.0f);
 		}
 
-		mDirLights[0].Ambient = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		mDirLights[0].Ambient = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
 		mDirLights[0].Diffuse = Vector4(0.5f, 0.5f, 0.4f, 1.0f);
 		mDirLights[0].Specular = Vector4(0.8f, 0.8f, 0.7f, 1.0f);
 		mDirLights[0].Direction = XMFLOAT3(-0.57735f, -0.57735f, 0.57735f);
@@ -55,12 +55,12 @@ namespace ssao
 		//mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(116.0f), -4.0f/sqrtf(116.0f), 0.0f);
 		//mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(109.0f), -3.0f/sqrtf(109.0f), 0.0f);
 
-		mDirLights[1].Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+		mDirLights[1].Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
 		mDirLights[1].Diffuse = Vector4(0.40f, 0.40f, 0.40f, 1.0f);
 		mDirLights[1].Specular = Vector4(0.2f, 0.2f, 0.2f, 1.0f);
 		mDirLights[1].Direction = XMFLOAT3(0.707f, -0.707f, 0.0f);
 
-		mDirLights[2].Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+		mDirLights[2].Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
 		mDirLights[2].Diffuse = Vector4(0.2f, 0.2f, 0.2f, 1.0f);
 		mDirLights[2].Specular = Vector4(0.2f, 0.2f, 0.2f, 1.0f);
 		mDirLights[2].Direction = XMFLOAT3(0.0f, 0.0, -1.0f);

@@ -106,7 +106,8 @@ namespace frustumCulling
 		D3D11_SUBRESOURCE_DATA vinitData;
 		vinitData.pSysMem = &boxVertices[0];
 		HR(md3dDevice->CreateBuffer(&vbd, &vinitData, &mBoxVB));
-		mbUseOctree = true;
+		// mbUseOctree = true;
+		mbIsOnCulling = true;
 
 		return true;
 	}
@@ -177,6 +178,9 @@ namespace frustumCulling
 					BoundingFrustum Frustum(mCam.GetProj()); // 투영 행렬로 프러스텀 생성
 					BoundingFrustum localFrustum;
 					Frustum.Transform(localFrustum, WV.Invert()); // 월드 * 뷰의 역행렬로 로컬 공간으로 프로스텀 변환
+
+					BoundingFrustum debugFrustum;
+					BoundingFrustum::CreateFromMatrix(debugFrustum, WV);
 
 					if (!localFrustum.Intersects(mSkullBoundingBox)) // 로컬 공간의 바운딩 볼륨과 프러스텀 충돌 판정
 					{

@@ -49,6 +49,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SSAO", "SSAO\SSAO.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrustumCulling", "FrustumCulling\FrustumCulling.vcxproj", "{270B6900-64B7-4E51-AF32-3A1B82240FCC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PBR", "PBR\PBR.vcxproj", "{DEFA73C3-7BA2-4274-8DAD-BBA28D46E24D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -241,6 +243,14 @@ Global
 		{270B6900-64B7-4E51-AF32-3A1B82240FCC}.Release|x64.Build.0 = Release|x64
 		{270B6900-64B7-4E51-AF32-3A1B82240FCC}.Release|x86.ActiveCfg = Release|Win32
 		{270B6900-64B7-4E51-AF32-3A1B82240FCC}.Release|x86.Build.0 = Release|Win32
+		{DEFA73C3-7BA2-4274-8DAD-BBA28D46E24D}.Debug|x64.ActiveCfg = Debug|x64
+		{DEFA73C3-7BA2-4274-8DAD-BBA28D46E24D}.Debug|x64.Build.0 = Debug|x64
+		{DEFA73C3-7BA2-4274-8DAD-BBA28D46E24D}.Debug|x86.ActiveCfg = Debug|Win32
+		{DEFA73C3-7BA2-4274-8DAD-BBA28D46E24D}.Debug|x86.Build.0 = Debug|Win32
+		{DEFA73C3-7BA2-4274-8DAD-BBA28D46E24D}.Release|x64.ActiveCfg = Release|x64
+		{DEFA73C3-7BA2-4274-8DAD-BBA28D46E24D}.Release|x64.Build.0 = Release|x64
+		{DEFA73C3-7BA2-4274-8DAD-BBA28D46E24D}.Release|x86.ActiveCfg = Release|Win32
+		{DEFA73C3-7BA2-4274-8DAD-BBA28D46E24D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
