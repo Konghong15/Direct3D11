@@ -28,8 +28,7 @@ namespace initalization
 		mLights[2].Radiance = { 1.0f, 1.f, 1.f };
 		mLights[0].bIsUsed = true;
 		mLights[1].bIsUsed = true;
-		mLights[2].bIsUsed = true
-			;
+		mLights[2].bIsUsed = true;
 	}
 
 	bool D3DSample::Init()
@@ -237,7 +236,7 @@ namespace initalization
 		const Matrix viewRotationMatrix = Matrix::Identity;
 		const Matrix sceneRotationMatrix = Matrix::Identity;
 		const Matrix viewMatrix = mCam.GetView();
-		const Vector3 eyePosition = mCam.GetLook();
+		const Vector3 eyePosition = mCam.GetPosition();
 
 		Vector3 eyePos = mCam.GetPosition();
 		Matrix T = Matrix::CreateTranslation(eyePos);
