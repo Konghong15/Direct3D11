@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Shader">
-      <UniqueIdentifier>{b420107e-31ac-4ac7-8e11-176618a5cc3d}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -24,13 +21,7 @@
     <ClCompile Include="D3DSample.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Image.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils.cpp">
+    <ClCompile Include="ModelLoader.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,37 +29,50 @@
     <ClInclude Include="D3DSample.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Bone.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="LightBitFlag.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="Mesh.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Image.h">
+    <ClInclude Include="ModelDrawInfo.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Utils.h">
+    <ClInclude Include="ModelLoader.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="shaders\equirect2cube.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\irmap.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\pbr.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\skybox.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\spbrdf.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\spmap.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\tonemap.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
+    <ClInclude Include="Node.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="PSConstantBufferInfo.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="struct.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureBitFlag.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="VSConstantBufferInfo.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

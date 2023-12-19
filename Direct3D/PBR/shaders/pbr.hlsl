@@ -65,7 +65,7 @@ float gaSchlickG1(float cosTheta, float k)
 float gaSchlickGGX(float ndotl, float ndotv, float roughness)
 {
 	float r = roughness + 1.0;
-	float k = (r * r) / 8.0; // Epic suggests using this roughness remapping for analytic lights.
+	float k = (r * r) / 8.0; 
 	return gaSchlickG1(ndotl, k) * gaSchlickG1(ndotv, k);
 }
 

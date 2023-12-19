@@ -89,18 +89,18 @@ namespace initalization
 		mPixelCB = createConstantBuffer<CBPixel>();
 
 		mPBRProgram = createShaderProgram(
-			compileShader("pbr.hlsl", "VS", "vs_5_0"),
-			compileShader("pbr.hlsl", "PS", "ps_5_0"),
+			compileShader("shaders/pbr.hlsl", "VS", "vs_5_0"),
+			compileShader("shaders/pbr.hlsl", "PS", "ps_5_0"),
 			&meshInputLayout
 		);
 		mSkyboxProgram = createShaderProgram(
-			compileShader("skybox.hlsl", "VS", "vs_5_0"),
-			compileShader("skybox.hlsl", "PS", "ps_5_0"),
+			compileShader("shaders/skybox.hlsl", "VS", "vs_5_0"),
+			compileShader("shaders/skybox.hlsl", "PS", "ps_5_0"),
 			&skyboxInputLayout
 		);
 		mTonemapProgram = createShaderProgram(
-			compileShader("tonemap.hlsl", "VS", "vs_5_0"),
-			compileShader("tonemap.hlsl", "PS", "ps_5_0"),
+			compileShader("shaders/tonemap.hlsl", "VS", "vs_5_0"),
+			compileShader("shaders/tonemap.hlsl", "PS", "ps_5_0"),
 			nullptr
 		);
 
@@ -119,8 +119,8 @@ namespace initalization
 
 			// 계산 셰이더로 등장방형(직사각형) 텍스처를 큐브맵에 매핑시킨다.
 			{
-				ComputeProgram equirectToCubeProgram = createComputeProgram(compileShader("equirect2cube.hlsl", "main", "cs_5_0"));
-				Texture envTextureEquirect = createTexture(Image::fromFile("environment.hdr"), DXGI_FORMAT_R32G32B32A32_FLOAT, 1);
+				ComputeProgram equirectToCubeProgram = createComputeProgram(compileShader("shaders/equirect2cube.hlsl", "main", "cs_5_0"));
+				Texture envTextureEquirect = createTexture(Image::fromFile("textures/environment.hdr"), DXGI_FORMAT_R32G32B32A32_FLOAT, 1);
 
 				md3dContext->CSSetShaderResources(0, 1, &envTextureEquirect.srv);
 				md3dContext->CSSetUnorderedAccessViews(0, 1, &envTextureUnfiltered.uav, nullptr);
@@ -140,7 +140,7 @@ namespace initalization
 					float roughness;
 					float padding[3];
 				};
-				ComputeProgram spmapProgram = createComputeProgram(compileShader("spmap.hlsl", "main", "cs_5_0"));
+				ComputeProgram spmapProgram = createComputeProgram(compileShader("shaders/spmap.hlsl", "main", "cs_5_0"));
 				ID3D11Buffer* spmapCB = createConstantBuffer<SpecularMapFilterSettingsCB>();
 
 				mEnvTexture = createTextureCube(1024, 1024, DXGI_FORMAT_R16G16B16A16_FLOAT);
@@ -175,7 +175,7 @@ namespace initalization
 
 		// Compute diffuse irradiance cubemap.
 		{
-			ComputeProgram irmapProgram = createComputeProgram(compileShader("irmap.hlsl", "main", "cs_5_0"));
+			ComputeProgram irmapProgram = createComputeProgram(compileShader("shaders/irmap.hlsl", "main", "cs_5_0"));
 
 			mIrmapTexture = createTextureCube(32, 32, DXGI_FORMAT_R16G16B16A16_FLOAT, 1);
 			createTextureUAV(mIrmapTexture, 0);
@@ -190,7 +190,7 @@ namespace initalization
 
 		// Compute Cook-Torrance BRDF 2D LUT for split-sum approximation.
 		{
-			ComputeProgram spBRDFProgram = createComputeProgram(compileShader("spbrdf.hlsl", "main", "cs_5_0"));
+			ComputeProgram spBRDFProgram = createComputeProgram(compileShader("shaders/spbrdf.hlsl", "main", "cs_5_0"));
 
 			mSpBRDF_LUT = createTexture(256, 256, DXGI_FORMAT_R16G16_FLOAT, 1);
 			mBRDFSampler = createSamplerState(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);

@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{defa73c3-7ba2-4274-8dad-bba28d46e24d}</ProjectGuid>
-    <RootNamespace>PBR</RootNamespace>
+    <ProjectGuid>{7dae3ee5-55e9-47cd-bbe4-3e88231c922a}</ProjectGuid>
+    <RootNamespace>ResourceManager</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -134,10 +134,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="D3DSample.cpp" />
-    <ClCompile Include="Image.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
@@ -145,33 +143,22 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation.h" />
+    <ClInclude Include="Bone.h" />
     <ClInclude Include="D3DSample.h" />
-    <ClInclude Include="Image.h" />
+    <ClInclude Include="LightBitFlag.h" />
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="Utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="shaders\equirect2cube.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="shaders\irmap.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="shaders\pbr.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="shaders\skybox.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="shaders\spbrdf.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="shaders\spmap.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="shaders\tonemap.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="ModelDrawInfo.h" />
+    <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="Node.h" />
+    <ClInclude Include="PSConstantBufferInfo.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="struct.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureBitFlag.h" />
+    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="VSConstantBufferInfo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
