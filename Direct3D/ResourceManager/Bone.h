@@ -4,11 +4,14 @@
 
 #include <directxtk/SimpleMath.h>
 
-struct Node;
-
-struct Bone
+namespace resourceManager
 {
-	std::string Name;
-	const Node* Node = nullptr;
-	DirectX::SimpleMath::Matrix OffsetMatrix;
-};
+	struct Node;
+
+	struct Bone
+	{
+		std::string Name;
+		const Node* Node = nullptr;
+		DirectX::SimpleMath::Matrix OffsetMatrix;
+	};
+}

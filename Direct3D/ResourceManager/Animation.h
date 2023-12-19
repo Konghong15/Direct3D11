@@ -5,49 +5,28 @@
 
 #include <directxtk/SimpleMath.h>
 
-struct KeyAnimation
+namespace resourceManager
 {
-	double Time;
-	DirectX::SimpleMath::Vector3 Position;
-	DirectX::SimpleMath::Quaternion Rotation;
-	DirectX::SimpleMath::Vector3 Scaling;
-};
-
-struct AnimationNode
-{
-	std::vector<KeyAnimation> KeyAnimations;
-
-	DirectX::SimpleMath::Matrix Evaluate(double progressTime) const
+	struct KeyAnimation
 	{
-		using namespace DirectX::SimpleMath;
-		Vector3 position = KeyAnimations[0].Position;
-		Quaternion rotation = KeyAnimations[0].Rotation;
-		Vector3 scaling = KeyAnimations[0].Scaling;
+		double Time;
+		DirectX::SimpleMath::Vector3 Position;
+		DirectX::SimpleMath::Quaternion Rotation;
+		DirectX::SimpleMath::Vector3 Scaling;
+	};
 
-		for (auto iter = KeyAnimations.begin(); iter != KeyAnimations.end(); ++iter)
-		{
-			if (iter->Time > progressTime)
-			{
-				auto begin = iter - 1;
-				float delta = progressTime - begin->Time;
-				float deltaRatio = delta / (iter->Time - begin->Time);
+	struct AnimationNode
+	{
+	public:
+		DirectX::SimpleMath::Matrix Evaluate(double progressTime) const;
 
-				position = Vector3::Lerp(begin->Position, iter->Position, deltaRatio);
-				rotation = Quaternion::Slerp(begin->Rotation, iter->Rotation, deltaRatio);
-				scaling = Vector3::Lerp(begin->Scaling, iter->Scaling, deltaRatio);
+	public:
+		std::vector<KeyAnimation> KeyAnimations;
+	};
 
-				break;
-			}
-		}
-
-		return Matrix::CreateScale(scaling)
-			* Matrix::CreateFromQuaternion(rotation)
-			* Matrix::CreateTranslation(position);
-	}
-};
-
-struct Animation
-{
-	double Duration;
-	std::map<std::string, AnimationNode> AnimationNodes;
-};
+	struct Animation
+	{
+		double Duration;
+		std::map<std::string, AnimationNode> AnimationNodes;
+	};
+}

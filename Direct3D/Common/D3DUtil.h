@@ -121,6 +121,22 @@ namespace common
 			return texArraySRV;
 		}
 
+		static HRESULT CreateTextureFromFile(ID3D11Device* d3dDevice, const wchar_t* szFileName, ID3D11ShaderResourceView** textureView)
+		{
+			HRESULT hr = S_OK;
+
+			hr = DirectX::CreateDDSTextureFromFile(d3dDevice, szFileName, nullptr, textureView);
+			if (FAILED(hr))
+			{
+				hr = DirectX::CreateWICTextureFromFile(d3dDevice, szFileName, nullptr, textureView);
+				if (FAILED(hr))
+				{
+					return hr;
+				}
+			}
+			return S_OK;
+		}
+
 		static HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut)
 		{
 			HRESULT hr = S_OK;
@@ -263,6 +279,12 @@ namespace common
 			ReleaseCOM(randomTex);
 
 			return randomTexSRV;
+		}
+
+		static std::wstring ToWString(const std::string& s)
+		{
+			std::wstring wsTmp(s.begin(), s.end());
+			return wsTmp;
 		}
 	};
 }

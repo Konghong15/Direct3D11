@@ -11,43 +11,26 @@
 #include "Texture.h"
 #include "Bone.h"
 
-struct MeshData
+namespace resourceManager
 {
-	std::vector<Vertex> Vertices;
-	std::vector<unsigned int> Indices;
-};
-
-struct Mesh
-{
-	unsigned int VertexCount = 0;
-	unsigned int IndexCount = 0;
-	ID3D11Buffer* VertexBuffer = nullptr;
-	ID3D11Buffer* IndexBuffer = nullptr;
-	TextureBitFlag TextureBitFlag = { 0, };
-	std::array<Texture, static_cast<size_t>(eTextureBitFlag::Size)> Textures;
-	std::vector<Bone> Bones;
-
-	void Release()
+	struct MeshData
 	{
-		VertexCount = 0;
-		IndexCount = 0;
-		TextureBitFlag = { 0, };
+		std::vector<Vertex> Vertices;
+		std::vector<unsigned int> Indices;
+	};
 
-		if (VertexBuffer != nullptr)
-		{
-			VertexBuffer->Release();
-			VertexBuffer = nullptr;
-		}
-		if (IndexBuffer != nullptr)
-		{
-			IndexBuffer->Release();
-			IndexBuffer = nullptr;
-		}
-		for (auto& texture : Textures)
-		{
-			texture.Release();
-		}
-
-		Bones.clear();
-	}
-};
+	struct Mesh
+	{
+	public:
+		void Release();
+		
+	public:
+		unsigned int VertexCount = 0;
+		unsigned int IndexCount = 0;
+		ID3D11Buffer* VertexBuffer = nullptr;
+		ID3D11Buffer* IndexBuffer = nullptr;
+		TextureBitFlag TextureBitFlag = { 0, };
+		std::array<Texture, static_cast<size_t>(eTextureBitFlag::Size)> Textures;
+		std::vector<Bone> Bones;
+	};
+}

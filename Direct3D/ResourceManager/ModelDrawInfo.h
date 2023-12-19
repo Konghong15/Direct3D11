@@ -5,10 +5,13 @@
 #include "VSConstantBufferInfo.h"
 #include "PSConstantBufferInfo.h"
 
-struct ModelDrawInfo
+namespace resourceManager
 {
-	ID3D11Buffer* VSConstantBuffer;
-	ID3D11Buffer* PSConstantBuffer;
-	VSConstantBufferInfo VSConstantBufferInfo;
-	PSConstantBufferInfo PSConstantBufferInfo;
-};
+	struct ModelDrawInfo
+	{
+		ID3D11Buffer* VSConstantBuffer;
+		ID3D11Buffer* PSConstantBuffer;
+		VSConstantBufferInfo VSConstantBufferInfo;
+		PSConstantBufferInfo PSConstantBufferInfo;
+	};
+}

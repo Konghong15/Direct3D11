@@ -1,19 +1,18 @@
 #pragma once
 
-struct Texture {
-	std::string Type;
-	std::string Path;
-	ID3D11ShaderResourceView* TextureRV = nullptr;
+#include <string>
+#include <d3d11.h>
 
-	void Release()
+namespace resourceManager
+{
+	struct Texture
 	{
-		Type = "";
-		Path = "";
+	public:
+		void Release();
 
-		if (TextureRV != nullptr)
-		{
-			TextureRV->Release();
-			TextureRV = nullptr;
-		}
-	}
-};
+	public:
+		std::string Type;
+		std::string Path;
+		ID3D11ShaderResourceView* TextureRV = nullptr;
+	};
+}
