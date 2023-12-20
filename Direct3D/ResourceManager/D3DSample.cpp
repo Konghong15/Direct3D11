@@ -1,12 +1,31 @@
 #include <cassert>
 
 #include "D3DSample.h"
+// #include "ResourceManager.h"
 
-namespace initalization
+namespace resourceManager
 {
 	D3DSample::D3DSample(HINSTANCE hInstance, UINT width, UINT height, std::wstring name)
 		: D3DProcessor(hInstance, width, height, name)
 	{
+	}
+	D3DSample::~D3DSample()
+	{
+		//ResourceManager::DeleteInstance();
+	}
+
+	bool D3DSample::Init()
+	{
+		 if (!D3DProcessor::Init())
+		 {
+		 	return false;
+		 }
+		// 
+		// ResourceManager::GetInstance()->Init(md3dDevice, md3dContext);
+		// 
+		// ResourceManager::GetInstance()->LoadModel("models/model.fbx");
+
+		return true;
 	}
 
 	void D3DSample::Update(float deltaTime)
@@ -18,12 +37,12 @@ namespace initalization
 	{
 		assert(md3dContext);
 		assert(mSwapChain);
-
+		
 		float color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
-
+		
 		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
 		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
+		
 		mSwapChain->Present(0, 0);
 	}
 }

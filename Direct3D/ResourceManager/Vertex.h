@@ -2,15 +2,32 @@
 
 #include <directxtk/SimpleMath.h>
 
-struct Vertex
+namespace vertex
 {
-	enum { INVALID_INDEX = -1 };
+	struct Basic32
+	{
+		DirectX::SimpleMath::Vector3 Pos;
+		DirectX::SimpleMath::Vector3 Normal;
+		DirectX::SimpleMath::Vector2 Tex;
+	};
 
-	DirectX::SimpleMath::Vector4 Position;
-	DirectX::SimpleMath::Vector3 Normal;
-	DirectX::SimpleMath::Vector3 Tangent;
-	DirectX::SimpleMath::Vector3 Binormal;
-	DirectX::SimpleMath::Vector2 UV;
-	int Indices[4] = { INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX };
-	float Weights[4] = { 0.f };
+	struct PosNormalTexTan
+	{
+		DirectX::SimpleMath::Vector3 Pos;
+		DirectX::SimpleMath::Vector3 Normal;
+		DirectX::SimpleMath::Vector2 Tex;
+		DirectX::SimpleMath::Vector4 TangentU;
+	};
+
+	struct PosNormalTexTanSkinned
+	{
+		enum { INVALID_INDEX = -1 };
+
+		DirectX::SimpleMath::Vector3 Pos;
+		DirectX::SimpleMath::Vector3 Normal;
+		DirectX::SimpleMath::Vector2 Tex;
+		DirectX::SimpleMath::Vector4 TangentU;
+		int Indices[4] = { INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX };
+		float Weights[4] = { 0.f };
+	};
 };

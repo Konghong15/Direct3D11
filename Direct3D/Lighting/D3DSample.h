@@ -37,7 +37,7 @@ namespace lighting
 		float unused;
 	};
 
-	struct Model
+	class Model
 	{
 		ID3D11Buffer* VertexBuffer;
 		ID3D11Buffer* IndexBuffer;

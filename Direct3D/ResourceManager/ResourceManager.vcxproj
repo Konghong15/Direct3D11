@@ -137,11 +137,8 @@
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="D3DSample.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
-    <ClCompile Include="Node.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
-    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
@@ -150,15 +147,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
-    <ClInclude Include="Bone.h" />
     <ClInclude Include="D3DSample.h" />
-    <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
-    <ClInclude Include="ModelDrawInfo.h" />
-    <ClInclude Include="Node.h" />
     <ClInclude Include="ResourceManager.h" />
-    <ClInclude Include="struct.h" />
-    <ClInclude Include="Texture.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
