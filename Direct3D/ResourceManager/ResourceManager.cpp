@@ -7,6 +7,7 @@
 
 #include "d3dUtil.h"
 #include "Model.h"
+#include "SkinnedModel.h"
 
 namespace resourceManager
 {
@@ -65,6 +66,27 @@ namespace resourceManager
 	Model* ResourceManager::LoadModel(const std::wstring& fileName)
 	{
 		return LoadModel(common::D3DHelper::convert_from_wstring(fileName));
+	}
+
+	SkinnedModel* ResourceManager::LoadSkinnedModel(const std::string& fileName)
+	{
+		auto find = mSkinnedModels.find(fileName);
+
+		if (find != mSkinnedModels.end())
+		{
+			return find->second;
+		}
+
+		SkinnedModel* model = new SkinnedModel(md3dDevice, fileName);
+
+		mSkinnedModels.insert({ fileName, model });
+
+		return model;
+	}
+
+	SkinnedModel* ResourceManager::LoadSkinnedModel(const std::wstring& fileName)
+	{
+		return LoadSkinnedModel(common::D3DHelper::convert_from_wstring(fileName));
 	}
 
 	ID3D11ShaderResourceView* ResourceManager::LoadTexture(const std::string& fileName)

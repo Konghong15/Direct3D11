@@ -16,10 +16,27 @@
 
 namespace resourceManager
 {
+	DirectX::SimpleMath::Matrix convertMatrix(const aiMatrix4x4& aiMatrix)
+	{
+		DirectX::SimpleMath::Matrix result;
+
+		for (int i = 0; i < 4; ++i)
+		{
+			result.m[i][0] = aiMatrix[i][0];
+			result.m[i][1] = aiMatrix[i][1];
+			result.m[i][2] = aiMatrix[i][2];
+			result.m[i][3] = aiMatrix[i][3];
+		}
+
+		return result;
+	}
+
 	Model::Model(ID3D11Device* d3dDevice, const std::string& fileName)
+		: IndexBufferFormat(DXGI_FORMAT_R32_UINT)
+		, VertexStride(sizeof(vertex::PosNormalTexTan))
 	{
 		Assimp::Importer importer;
-		importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, 0);    // $assimp_fbx$ 노드 생성안함
+		importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, 0);    // $assimp_fbx$ 드 생.성안함
 		unsigned int importFlags = aiProcess_Triangulate |
 			aiProcess_GenNormals |
 			aiProcess_GenUVCoords |
@@ -33,7 +50,7 @@ namespace resourceManager
 		Vertices.reserve(1024);
 		Indices.reserve(1024);
 
-		std::function<void(aiNode*)> nodeRecursive = [&](aiNode* node)
+		std::function<void(aiNode*)> nodeRecursive = [this, scene, &nodeRecursive, &id](aiNode* node)
 			{
 				for (UINT i = 0; i < node->mNumMeshes; ++i)
 				{
@@ -89,7 +106,7 @@ namespace resourceManager
 					}
 
 					for (UINT j = 0; j < mesh->mNumFaces; ++j) {
-						aiFace face = mesh->mFaces[i];
+						aiFace face = mesh->mFaces[j];
 
 						for (UINT k = 0; k < face.mNumIndices; ++k)
 						{
@@ -101,7 +118,6 @@ namespace resourceManager
 
 					aiString texturePath;
 					std::filesystem::path basePath = std::filesystem::current_path() / "textures";
-
 
 					std::vector<bool> hasTexture(21);
 					for (int i = 0; i < 21; ++i)
@@ -118,7 +134,11 @@ namespace resourceManager
 						auto curPath = basePath / fileName;
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
-						AlbedoSRVs.push_back(srv);
+						SRVs[static_cast<size_t>(eMaterialTexture::Diffuse)].push_back(srv);
+					}
+					else
+					{
+						SRVs[static_cast<size_t>(eMaterialTexture::Diffuse)].push_back(nullptr);
 					}
 					if (material->GetTexture(aiTextureType_NORMALS, 0, &texturePath) == AI_SUCCESS)
 					{
@@ -126,23 +146,36 @@ namespace resourceManager
 						auto curPath = basePath / fileName;
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
-						NormalSRVs.push_back(srv);
+						SRVs[static_cast<size_t>(eMaterialTexture::Normal)].push_back(srv);
 					}
-					if (material->GetTexture(aiTextureType_METALNESS, 0, &texturePath) == AI_SUCCESS)
+					else
+					{
+						SRVs[static_cast<size_t>(eMaterialTexture::Normal)].push_back(nullptr);
+					}
+					if (material->GetTexture(aiTextureType_SPECULAR, 0, &texturePath) == AI_SUCCESS)
 					{
 						const char* fileName = strrchr(texturePath.C_Str(), '\\') + 1;
 						auto curPath = basePath / fileName;
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
-						MetalnessSRVs.push_back(srv);
+						SRVs[static_cast<size_t>(eMaterialTexture::Specular)].push_back(srv);
 					}
-					if (material->GetTexture(aiTextureType_SHININESS, 0, &texturePath) == AI_SUCCESS)
+					else
+					{
+						SRVs[static_cast<size_t>(eMaterialTexture::Specular)].push_back(nullptr);
+
+					}
+					if (material->GetTexture(aiTextureType_OPACITY, 0, &texturePath) == AI_SUCCESS)
 					{
 						const char* fileName = strrchr(texturePath.C_Str(), '\\') + 1;
 						auto curPath = basePath / fileName;
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
-						RoughnessSRVs.push_back(srv);
+						SRVs[static_cast<size_t>(eMaterialTexture::Opacity)].push_back(srv);
+					}
+					else
+					{
+						SRVs[static_cast<size_t>(eMaterialTexture::Opacity)].push_back(nullptr);
 					}
 				}
 
@@ -151,8 +184,52 @@ namespace resourceManager
 					nodeRecursive(node->mChildren[i]);
 				}
 			};
-
 		nodeRecursive(scene->mRootNode);
+
+		importer.FreeScene();
+
+		HRESULT hr;
+
+		D3D11_BUFFER_DESC vbd;
+		vbd.Usage = D3D11_USAGE_IMMUTABLE;
+		vbd.ByteWidth = static_cast<size_t>(sizeof(vertex::PosNormalTexTan) * Vertices.size());
+		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vbd.CPUAccessFlags = 0;
+		vbd.MiscFlags = 0;
+
+		D3D11_SUBRESOURCE_DATA initData;
+		initData.pSysMem = &Vertices[0];
+
+		hr = d3dDevice->CreateBuffer(&vbd, &initData, &VB);
+		if (FAILED(hr)) {
+			assert(false);
+		}
+
+		D3D11_BUFFER_DESC ibd;
+		ibd.Usage = D3D11_USAGE_IMMUTABLE;
+		ibd.ByteWidth = static_cast<size_t>(sizeof(unsigned int) * Indices.size());
+		ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		ibd.CPUAccessFlags = 0;
+		ibd.MiscFlags = 0;
+
+		initData.pSysMem = &Indices[0];
+
+		hr = d3dDevice->CreateBuffer(&ibd, &initData, &IB);
+		if (FAILED(hr)) {
+			assert(false);
+		}
+
+		D3D11_BUFFER_DESC cbd;
+		cbd.Usage = D3D11_USAGE_DEFAULT;
+		cbd.ByteWidth = sizeof(int) * static_cast<size_t>(eMaterialTexture::Size);
+		cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cbd.CPUAccessFlags = 0;
+		cbd.MiscFlags = 0;
+
+		hr = d3dDevice->CreateBuffer(&cbd, NULL, &CB);
+		if (FAILED(hr)) {
+			assert(false);
+		}
 	}
 
 	Model::~Model()
@@ -166,10 +243,22 @@ namespace resourceManager
 		UINT offset = 0;
 		d3dContext->IASetIndexBuffer(IB, IndexBufferFormat, 0);
 		d3dContext->IASetVertexBuffers(0, 1, &VB, &VertexStride, &offset);
+		d3dContext->PSSetConstantBuffers(1, 1, &CB);
 
-		for (Subset& subset : SubsetTable)
+		for (size_t i = 0; i < SubsetTable.size(); ++i)
 		{
-			d3dContext->DrawIndexed(subset.FaceCount * 3, subset.FaceStart * 3, 0);
+			ID3D11ShaderResourceView* srv[static_cast<size_t>(eMaterialTexture::Size)] = { nullptr };
+			int bUseTextures[static_cast<size_t>(eMaterialTexture::Size)] = { false, };
+
+			for (size_t j = 0; j < static_cast<size_t>(eMaterialTexture::Size); ++j)
+			{
+				srv[j] = SRVs[j][i];
+				bUseTextures[j] = srv[j] != nullptr;
+			}
+
+			d3dContext->UpdateSubresource(CB, 0, 0, bUseTextures, 0, 0);
+			d3dContext->PSSetShaderResources(0, 4, srv);
+			d3dContext->DrawIndexed(SubsetTable[i].FaceCount * 3, SubsetTable[i].FaceStart * 3, SubsetTable[i].VertexStart);
 		}
 	}
 }

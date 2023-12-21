@@ -14,13 +14,15 @@
 #include "D3DSample.h"
 #include "MathHelper.h"
 #include "Utils.h"
+#include "d3dUtil.h"
+#include "MathHelper.h"
 
 namespace initalization
 {
 	D3DSample::D3DSample(HINSTANCE hInstance, UINT width, UINT height, std::wstring name)
 		: D3DProcessor(hInstance, width, height, name)
 	{
-		mLights[0].Direction = { -1.0f,  0.0f, 0.0f };
+		mLights[0].Direction = { 0.0f,  0.0f, 1.0f };
 		mLights[1].Direction = { 1.0f,  0.0f, 0.0f };
 		mLights[2].Direction = { 0.0f, -1.0f, 0.0f };
 		mLights[0].Radiance = { 1.0f, 1.f, 1.f };
@@ -232,9 +234,12 @@ namespace initalization
 
 	void D3DSample::Render()
 	{
+		static float radian = 0.f;
+		// radian += 0.01f;
+
 		const Matrix projectionMatrix = mCam.GetProj();
 		const Matrix viewRotationMatrix = Matrix::Identity;
-		const Matrix sceneRotationMatrix = Matrix::Identity;
+		const Matrix worldMatrix = Matrix::CreateRotationY(radian);
 		const Matrix viewMatrix = mCam.GetView();
 		const Vector3 eyePosition = mCam.GetPosition();
 
@@ -246,14 +251,17 @@ namespace initalization
 			CBVertex transformConstants;
 			transformConstants.ViewProjectionMatrix = viewMatrix * projectionMatrix;
 			transformConstants.SkyProjectionMatrix = WVP;
-			transformConstants.SceneRotationMatrix = sceneRotationMatrix;
+			transformConstants.WorldMatrix = worldMatrix;
 
 			transformConstants.ViewProjectionMatrix = transformConstants.ViewProjectionMatrix.Transpose();
 			transformConstants.SkyProjectionMatrix = transformConstants.SkyProjectionMatrix.Transpose();
-			transformConstants.SceneRotationMatrix = transformConstants.SceneRotationMatrix.Transpose();
+			transformConstants.WorldMatrix = transformConstants.WorldMatrix.Transpose();
 
 			md3dContext->UpdateSubresource(mVertexCB, 0, nullptr, &transformConstants, 0, 0);
 		}
+
+
+
 
 		// Update shading constant buffer (for pixel shader).
 		{
@@ -262,8 +270,15 @@ namespace initalization
 			shadingConstants.UseIBL.x = bUseIBL ? 1.0f : 0;
 
 			for (int i = 0; i < 3; ++i) {
-				const Light& light = mLights[i];
+				Light& light = mLights[i];
+
+				if (GetAsyncKeyState('3') & 0x8000)
+					light.Direction += Vector3(1, 1, 1) * 0.01f;
+				if (GetAsyncKeyState('4') & 0x8000)
+					light.Direction += Vector3(1, 1, 1) * -0.01f;
+
 				shadingConstants.lights[i].Direction = Vector4(light.Direction);
+				shadingConstants.lights[i].Direction.Normalize();
 
 				if (light.bIsUsed) {
 					shadingConstants.lights[i].Radiance = Vector4(light.Radiance);

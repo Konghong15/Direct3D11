@@ -1,8 +1,8 @@
 cbuffer TransformConstants : register(b0)
 {
 	float4x4 viewProjectionMatrix;
-	float4x4 skyProjectionMatrix;
-	float4x4 sceneRotationMatrix;
+	float4x4 gSkyProjMatrix;
+	float4x4 WorldMatrix;
 };
 
 struct PixelShaderInput
@@ -18,7 +18,7 @@ PixelShaderInput VS(float3 position : POSITION)
 {
 	PixelShaderInput vout;
 	vout.localPosition = position;
-	vout.pixelPosition = mul(float4(position, 1.0), skyProjectionMatrix);
+	vout.pixelPosition = mul(float4(position, 1.0), gSkyProjMatrix);
 	return vout;
 }
 

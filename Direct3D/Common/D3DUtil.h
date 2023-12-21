@@ -233,7 +233,7 @@ namespace common
 		{
 			using namespace DirectX::SimpleMath;
 
-			Vector4 randomValues[1024];
+			std::vector<Vector4> randomValues(1024);
 
 			for (int i = 0; i < 1024; ++i)
 			{
@@ -244,7 +244,7 @@ namespace common
 			}
 
 			D3D11_SUBRESOURCE_DATA initData;
-			initData.pSysMem = randomValues;
+			initData.pSysMem = &randomValues[0];
 			initData.SysMemPitch = 1024 * sizeof(Vector4);
 			initData.SysMemSlicePitch = 0;
 

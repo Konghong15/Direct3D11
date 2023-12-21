@@ -1,31 +1,19 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <vector>
 #include <d3d11.h>
+#include <directxtk/SimpleMath.h>
+#include <DirectXCollision.h>
 
-#include "Animation.h"
 #include "LightHelper.h"
 #include "Vertex.h"
+#include "Subset.h"
+#include "eMaterialTexture.h"
 
 namespace resourceManager
 {
-	struct Subset
-	{
-		Subset() :
-			Id(-1),
-			VertexStart(0), VertexCount(0),
-			FaceStart(0), FaceCount(0)
-		{
-		}
-
-		UINT Id;
-		UINT VertexStart;
-		UINT VertexCount;
-		UINT FaceStart;
-		UINT FaceCount;
-	};
-
 	class Model
 	{
 	public:
@@ -37,18 +25,26 @@ namespace resourceManager
 	public:
 		// material
 		std::vector<common::Material> Materials;
-		std::vector<ID3D11ShaderResourceView*> AlbedoSRVs;
-		std::vector<ID3D11ShaderResourceView*> NormalSRVs;
-		std::vector<ID3D11ShaderResourceView*> MetalnessSRVs;
-		std::vector<ID3D11ShaderResourceView*> RoughnessSRVs;
+		std::array<std::vector<ID3D11ShaderResourceView*>, static_cast<size_t>(eMaterialTexture::Size)> SRVs;
+		ID3D11Buffer* CB;
 
 		// mesh
 		std::vector<vertex::PosNormalTexTan> Vertices;
 		std::vector<UINT> Indices;
 		ID3D11Buffer* VB;
 		ID3D11Buffer* IB;
-		DXGI_FORMAT IndexBufferFormat; // Always 32-bit
+		DXGI_FORMAT IndexBufferFormat; // 항상 32비트 가정함 
 		UINT VertexStride;
 		std::vector<Subset> SubsetTable;
+
+		// scene data
+		DirectX::BoundingBox BoundingBox;
+		DirectX::BoundingSphere BoundingSphere;
+	};
+
+	struct ModelInstance
+	{
+		Model* Model;
+		DirectX::SimpleMath::Matrix WorldMatrix;
 	};
 }

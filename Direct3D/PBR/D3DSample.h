@@ -28,7 +28,7 @@ namespace initalization
 	{
 		Matrix ViewProjectionMatrix;
 		Matrix SkyProjectionMatrix;
-		Matrix SceneRotationMatrix;
+		Matrix WorldMatrix;
 	};
 
 	struct CBPixel

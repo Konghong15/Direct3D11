@@ -5,9 +5,9 @@ static const float3 Fdielectric = 0.04;
 
 cbuffer cbVertexShader : register(b0)
 {
-	float4x4 viewProjectionMatrix;
+	float4x4 gViewProjMatrix;
 	float4x4 skyProjectionMatrix;
-	float4x4 sceneRotationMatrix;
+	float4x4 worldMatrix;
 };
 
 cbuffer cbPixelShader : register(b0)
@@ -85,13 +85,13 @@ PixelShaderInput VS(VertexShaderInput vin)
 {
 	PixelShaderInput vout;
 	
-	vout.position = mul(float4(vin.position, 1.0), sceneRotationMatrix).xyz;
+	vout.position = mul(float4(vin.position, 1.0), worldMatrix).xyz;
 	vout.texcoord = float2(vin.texcoord.x, 1.0 - vin.texcoord.y);
 
 	float3x3 TBN = float3x3(vin.tangent, vin.bitangent, vin.normal);
-	vout.tangentBasis = mul(transpose(TBN), (float3x3)sceneRotationMatrix);
+	vout.tangentBasis = mul(transpose(TBN), (float3x3)worldMatrix);
 
-	float4x4 mvpMatrix = mul(sceneRotationMatrix, viewProjectionMatrix);
+	float4x4 mvpMatrix = mul(worldMatrix, gViewProjMatrix);
 	vout.pixelPosition = mul(float4(vin.position, 1.0), mvpMatrix);
 
 	return vout;
@@ -105,9 +105,9 @@ float4 PS(PixelShaderInput pin) : SV_Target
 
 	float3 view = normalize(eyePosition - pin.position);
 
-	float3 N = normalize(2.0 * normalTexture.Sample(defaultSampler, pin.texcoord).rgb - 1.0);
+	float3 N = normalize(2.0 * normalTexture.Sample(defaultSampler, pin.texcoord).rgb 
+	- 1.0);
 	N = normalize(mul(pin.tangentBasis, N));
-	
 	float ndotv = max(0.0, dot(N, view));
 	
 	float3 viewReflect = 2.0 * ndotv * N - view;

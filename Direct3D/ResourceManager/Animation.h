@@ -25,9 +25,9 @@ namespace resourceManager
 		std::vector<KeyAnimation> KeyAnimations;
 	};
 
-	struct Animation
+	struct AnimationClip
 	{
 		double Duration;
-		std::map<std::string, AnimationNode> AnimationNodes;
+		std::vector<AnimationNode> AnimationNodes;
 	};
 }

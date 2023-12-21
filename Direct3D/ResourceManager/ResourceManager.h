@@ -8,6 +8,7 @@
 namespace resourceManager
 {
 	class Model;
+	class SkinnedModel;
 	struct Node;
 
 	class ResourceManager
@@ -20,6 +21,8 @@ namespace resourceManager
 
 		Model* LoadModel(const std::string& fileName);
 		Model* LoadModel(const std::wstring& fileName);
+		SkinnedModel* LoadSkinnedModel(const std::string& fileName);
+		SkinnedModel* LoadSkinnedModel(const std::wstring& fileName);
 		ID3D11ShaderResourceView* LoadTexture(const std::string& fileName);
 		ID3D11ShaderResourceView* LoadTexture(const std::wstring& fileName);
 
@@ -35,5 +38,6 @@ namespace resourceManager
 
 		std::map<std::string, ID3D11ShaderResourceView*> mSRVs;
 		std::map<std::string, Model*> mModels;
+		std::map<std::string, SkinnedModel*> mSkinnedModels;
 	};
 }

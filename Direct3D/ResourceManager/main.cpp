@@ -7,13 +7,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
 	int result = 0;
 	{
-		//resourceManager::D3DSample sample(hInstance, 1920, 1080, L"TestApp");
-		//
-		//if (!sample.Init())
-		//{
-		//	return 0;
-		//}
-		//result = sample.Run();
+		resourceManager::D3DSample sample(hInstance, 1920, 1080, L"TestApp");
+		
+		if (!sample.Init())
+		{
+			return 0;
+		}
+		result = sample.Run();
 	}
 
 	_CrtDumpMemoryLeaks();
