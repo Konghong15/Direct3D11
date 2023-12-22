@@ -76,5 +76,8 @@
     <FxCompile Include="BasicVertexShader.hlsl">
       <Filter>shader</Filter>
     </FxCompile>
+    <FxCompile Include="SkinnedVertexShader.hlsl">
+      <Filter>shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

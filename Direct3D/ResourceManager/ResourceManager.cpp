@@ -39,6 +39,11 @@ namespace resourceManager
 		{
 			delete model.second;
 		}
+
+		for (auto& skinnedModel : mSkinnedModels)
+		{
+			delete skinnedModel.second;
+		}
 	}
 
 	void ResourceManager::Init(ID3D11Device* d3dDevice, ID3D11DeviceContext* d3dContext)

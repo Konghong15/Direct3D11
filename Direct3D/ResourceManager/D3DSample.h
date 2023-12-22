@@ -7,6 +7,7 @@
 
 #include "Camera.h"
 #include "Model.h"
+#include "SkinnedModel.h"
 
 namespace resourceManager
 {
@@ -18,7 +19,6 @@ namespace resourceManager
 		DirectX::SimpleMath::Matrix ViewTransform;
 		DirectX::SimpleMath::Matrix ProjectionTransform;
 		DirectX::SimpleMath::Vector4 CameraPosition;
-		DirectX::SimpleMath::Matrix BoneTransform[128];
 	};
 
 	struct PSConstantBufferInfo
@@ -50,8 +50,10 @@ namespace resourceManager
 
 	private:
 		ID3D11VertexShader* mVertexShader;
+		ID3D11VertexShader* mSkinnedVertexShader;
 		ID3D11PixelShader* mPixelShader;
 		ID3D11InputLayout* mInputLayout;
+		ID3D11InputLayout* mSkinnedInputLayout;
 
 		UINT mVertexBufferStride;
 		UINT mVertexBufferOffset;
@@ -72,5 +74,6 @@ namespace resourceManager
 		POINT mLastMousePos;
 
 		std::vector<ModelInstance> mModelInstances;
+		std::vector<SkinnedModelInstance> mSkinnedModelInstances;
 	};
 }

@@ -10,7 +10,7 @@ namespace resourceManager
 {
 	struct KeyAnimation
 	{
-		double Time;
+		float Time;
 		DirectX::SimpleMath::Vector3 Position;
 		DirectX::SimpleMath::Quaternion Rotation;
 		DirectX::SimpleMath::Vector3 Scaling;
@@ -19,15 +19,17 @@ namespace resourceManager
 	struct AnimationNode
 	{
 	public:
-		DirectX::SimpleMath::Matrix Evaluate(double progressTime) const;
+		DirectX::SimpleMath::Matrix Evaluate(float progressTime) const;
 
 	public:
+		std::string Name;
 		std::vector<KeyAnimation> KeyAnimations;
 	};
 
 	struct AnimationClip
 	{
+		std::string Name;
 		double Duration;
-		std::vector<AnimationNode> AnimationNodes;
+		std::map<std::string, AnimationNode> AnimationNodes; // 본이름과 애니메이션 노드 매핑
 	};
 }

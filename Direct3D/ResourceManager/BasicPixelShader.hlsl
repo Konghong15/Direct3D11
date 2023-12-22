@@ -76,5 +76,5 @@ float4 main(PS_INPUT Input) : SV_TARGET
 		albedo.a = txAlpha.Sample(samLinear, Input.UV).x; 
 	}
 
-	return float4(diffuse + specular, albedo.a);
+	return float4(diffuse + specular, 1);
 }

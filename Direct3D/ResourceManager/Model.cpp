@@ -35,6 +35,8 @@ namespace resourceManager
 		: IndexBufferFormat(DXGI_FORMAT_R32_UINT)
 		, VertexStride(sizeof(vertex::PosNormalTexTan))
 	{
+		using namespace DirectX::SimpleMath;
+
 		Assimp::Importer importer;
 		importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, 0);    // $assimp_fbx$ 드 생.성안함
 		unsigned int importFlags = aiProcess_Triangulate |
@@ -50,8 +52,11 @@ namespace resourceManager
 		Vertices.reserve(1024);
 		Indices.reserve(1024);
 
-		std::function<void(aiNode*)> nodeRecursive = [this, scene, &nodeRecursive, &id](aiNode* node)
+		std::function<void(aiNode*, Matrix)> nodeRecursive = [this, scene, &nodeRecursive, &id](aiNode* node, Matrix parentToWorldMatrix)
 			{
+				Matrix toParentMatrix = convertMatrix(node->mTransformation).Transpose();
+				Matrix toWorld = toParentMatrix * parentToWorldMatrix;
+
 				for (UINT i = 0; i < node->mNumMeshes; ++i)
 				{
 					unsigned int meshIndex = node->mMeshes[i];
@@ -80,6 +85,8 @@ namespace resourceManager
 							vertex.Pos.x = mesh->mVertices[j].x;
 							vertex.Pos.y = mesh->mVertices[j].y;
 							vertex.Pos.z = mesh->mVertices[j].z;
+
+							vertex.Pos = Vector3::Transform(vertex.Pos, toWorld);
 						}
 
 						if (mesh->HasNormals())
@@ -87,6 +94,8 @@ namespace resourceManager
 							vertex.Normal.x = mesh->mNormals[j].x;
 							vertex.Normal.y = mesh->mNormals[j].y;
 							vertex.Normal.z = mesh->mNormals[j].z;
+
+							vertex.Normal = Vector3::TransformNormal(vertex.Normal, toWorld);
 						}
 
 						if (mesh->HasTangentsAndBitangents())
@@ -94,6 +103,8 @@ namespace resourceManager
 							vertex.TangentU.x = mesh->mTangents[j].x;
 							vertex.TangentU.y = mesh->mTangents[j].y;
 							vertex.TangentU.z = mesh->mTangents[j].z;
+
+							vertex.TangentU = Vector3::TransformNormal(vertex.TangentU, toWorld);
 						}
 
 						if (mesh->HasTextureCoords(0))
@@ -130,8 +141,9 @@ namespace resourceManager
 
 					if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath) == AI_SUCCESS)
 					{
-						const char* fileName = strrchr(texturePath.C_Str(), '\\') + 1;
-						auto curPath = basePath / fileName;
+						std::filesystem::path filePath = texturePath.C_Str();
+
+						auto curPath = basePath / filePath.filename();
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
 						SRVs[static_cast<size_t>(eMaterialTexture::Diffuse)].push_back(srv);
@@ -142,8 +154,9 @@ namespace resourceManager
 					}
 					if (material->GetTexture(aiTextureType_NORMALS, 0, &texturePath) == AI_SUCCESS)
 					{
-						const char* fileName = strrchr(texturePath.C_Str(), '\\') + 1;
-						auto curPath = basePath / fileName;
+						std::filesystem::path filePath = texturePath.C_Str();
+
+						auto curPath = basePath / filePath.filename();
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
 						SRVs[static_cast<size_t>(eMaterialTexture::Normal)].push_back(srv);
@@ -154,8 +167,9 @@ namespace resourceManager
 					}
 					if (material->GetTexture(aiTextureType_SPECULAR, 0, &texturePath) == AI_SUCCESS)
 					{
-						const char* fileName = strrchr(texturePath.C_Str(), '\\') + 1;
-						auto curPath = basePath / fileName;
+						std::filesystem::path filePath = texturePath.C_Str();
+
+						auto curPath = basePath / filePath.filename();
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
 						SRVs[static_cast<size_t>(eMaterialTexture::Specular)].push_back(srv);
@@ -167,8 +181,9 @@ namespace resourceManager
 					}
 					if (material->GetTexture(aiTextureType_OPACITY, 0, &texturePath) == AI_SUCCESS)
 					{
-						const char* fileName = strrchr(texturePath.C_Str(), '\\') + 1;
-						auto curPath = basePath / fileName;
+						std::filesystem::path filePath = texturePath.C_Str();
+
+						auto curPath = basePath / filePath.filename();
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
 						SRVs[static_cast<size_t>(eMaterialTexture::Opacity)].push_back(srv);
@@ -181,10 +196,10 @@ namespace resourceManager
 
 				for (UINT i = 0; i < node->mNumChildren; ++i)
 				{
-					nodeRecursive(node->mChildren[i]);
+					nodeRecursive(node->mChildren[i], toWorld);
 				}
 			};
-		nodeRecursive(scene->mRootNode);
+		nodeRecursive(scene->mRootNode, Matrix::Identity);
 
 		importer.FreeScene();
 
@@ -236,6 +251,7 @@ namespace resourceManager
 	{
 		ReleaseCOM(VB);
 		ReleaseCOM(IB);
+		ReleaseCOM(CB);
 	}
 
 	void Model::Draw(ID3D11DeviceContext* d3dContext)

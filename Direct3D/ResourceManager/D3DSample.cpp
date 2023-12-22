@@ -9,7 +9,6 @@
 #include "D3DSample.h"
 #include "ResourceManager.h"
 
-
 namespace resourceManager
 {
 	D3DSample::D3DSample(HINSTANCE hInstance, UINT width, UINT height, std::wstring name)
@@ -19,6 +18,20 @@ namespace resourceManager
 	D3DSample::~D3DSample()
 	{
 		ResourceManager::DeleteInstance();
+
+		ReleaseCOM(mVertexShader);
+		ReleaseCOM(mSkinnedVertexShader);
+		ReleaseCOM(mPixelShader);
+		ReleaseCOM(mInputLayout);
+		ReleaseCOM(mSkinnedInputLayout);
+
+		ReleaseCOM(mWireFrameRasterizerState);
+		ReleaseCOM(mSolidRasterizerState);
+		ReleaseCOM(mBlendState);
+		ReleaseCOM(mSamplerLinear);
+
+		ReleaseCOM(mVSConstnat);
+		ReleaseCOM(mPSConstnat);
 	}
 
 	bool D3DSample::Init()
@@ -31,9 +44,6 @@ namespace resourceManager
 		mCam.SetPosition(0.0f, 2.0f, -500.0f);
 
 		ResourceManager::GetInstance()->Init(md3dDevice, md3dContext);
-
-		ResourceManager::GetInstance()->LoadSkinnedModel("models/SkinningTest.fbx");
-		// ResourceManager::GetInstance()->LoadModel("models/zeldaPosed001.fbx");
 
 		initD3D();
 		initShaderResource();
@@ -72,8 +82,40 @@ namespace resourceManager
 
 			mModelInstances.push_back({ model , Matrix::CreateTranslation(x, y,z) });
 		}
+		if (GetAsyncKeyState('2') & 0x8000)
+		{
+			SkinnedModel* model = ResourceManager::GetInstance()->LoadSkinnedModel("models/dancing.fbx");
 
+			int x = rand() % 300 - 150;
+			int y = rand() % 300 - 150;
+			int z = rand() % 300 - 150;
+
+			int animIndex = rand() % model->Animations.size();
+			auto findedAnim = std::next(model->Animations.begin(), animIndex);
+			std::string animationName = findedAnim->first;
+
+			mSkinnedModelInstances.push_back({ model , Matrix::CreateTranslation(x, y,z), 0, animationName });
+		}
+		if (GetAsyncKeyState('3') & 0x8000)
+		{
+			SkinnedModel* model = ResourceManager::GetInstance()->LoadSkinnedModel("models/huesitos.fbx");
+
+			int x = rand() % 300 - 150;
+			int y = rand() % 300 - 150;
+			int z = rand() % 300 - 150;
+
+			int animIndex = rand() % model->Animations.size();
+			auto findedAnim = std::next(model->Animations.begin(), animIndex);
+			std::string animationName = findedAnim->first;
+
+			mSkinnedModelInstances.push_back({ model , Matrix::CreateTranslation(x, y,z), 0, animationName });
+		}
 		mCam.UpdateViewMatrix();
+
+		for (auto& skinnedmodelInstance : mSkinnedModelInstances)
+		{
+			skinnedmodelInstance.TimePos += deltaTime;
+		}
 	}
 
 	void D3DSample::Render()
@@ -93,12 +135,26 @@ namespace resourceManager
 		mPSConstantBufferInfo.LightDirection = { 0, 0, 1 };
 		md3dContext->UpdateSubresource(mPSConstnat, 0, 0, &mPSConstantBufferInfo, 0, 0);
 
-		for (auto modelInstance : mModelInstances)
+		md3dContext->IASetInputLayout(mInputLayout);
+		md3dContext->VSSetShader(mVertexShader, nullptr, 0);
+
+		for (auto& modelInstance : mModelInstances)
 		{
 			mVSConstantBufferInfo.WorldTransform = modelInstance.WorldMatrix.Transpose();
 			md3dContext->UpdateSubresource(mVSConstnat, 0, 0, &mVSConstantBufferInfo, 0, 0);
 
 			modelInstance.Model->Draw(md3dContext);
+		}
+
+		md3dContext->IASetInputLayout(mSkinnedInputLayout);
+		md3dContext->VSSetShader(mSkinnedVertexShader, nullptr, 0);
+
+		for (auto& skinnedmodelInstance : mSkinnedModelInstances)
+		{
+			mVSConstantBufferInfo.WorldTransform = skinnedmodelInstance.WorldMatrix.Transpose();
+			md3dContext->UpdateSubresource(mVSConstnat, 0, 0, &mVSConstantBufferInfo, 0, 0);
+
+			skinnedmodelInstance.SkinnedModel->Draw(md3dContext, skinnedmodelInstance.AnimationName, skinnedmodelInstance.TimePos);
 		}
 
 		postRender();
@@ -200,6 +256,15 @@ namespace resourceManager
 				{ "TANGENT" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "UV" , 0, DXGI_FORMAT_R32G32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
+			D3D11_INPUT_ELEMENT_DESC skinnedlayout[] =
+			{
+				{ "POSITION" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TANGENT" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "UV" , 0, DXGI_FORMAT_R32G32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "INDICES" , 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "WEIGHTS" , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 60, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
 
 			ID3DBlob* vertexShaderBuffer = nullptr;
 			hr = D3DHelper::CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_5_0", &vertexShaderBuffer);
@@ -218,6 +283,25 @@ namespace resourceManager
 				vertexShaderBuffer->GetBufferSize(),
 				NULL,
 				&mVertexShader);
+			assert(SUCCEEDED(hr));
+			ReleaseCOM(vertexShaderBuffer);
+
+			hr = D3DHelper::CompileShaderFromFile(L"SkinnedVertexShader.hlsl", "main", "vs_5_0", &vertexShaderBuffer);
+			assert(SUCCEEDED(hr));
+
+			hr = md3dDevice->CreateInputLayout(
+				skinnedlayout,
+				ARRAYSIZE(skinnedlayout),
+				vertexShaderBuffer->GetBufferPointer(),
+				vertexShaderBuffer->GetBufferSize(),
+				&mSkinnedInputLayout);
+			assert(SUCCEEDED(hr));
+
+			hr = md3dDevice->CreateVertexShader(
+				vertexShaderBuffer->GetBufferPointer(),
+				vertexShaderBuffer->GetBufferSize(),
+				NULL,
+				&mSkinnedVertexShader);
 			assert(SUCCEEDED(hr));
 			ReleaseCOM(vertexShaderBuffer);
 
@@ -268,9 +352,7 @@ namespace resourceManager
 		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH, 1.f, 0.f);
 
 		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		md3dContext->IASetInputLayout(mInputLayout);
 
-		md3dContext->VSSetShader(mVertexShader, nullptr, 0);
 		md3dContext->VSSetConstantBuffers(0, 1, &mVSConstnat);
 
 		md3dContext->PSSetSamplers(0, 1, &mSamplerLinear);

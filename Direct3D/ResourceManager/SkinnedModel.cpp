@@ -4,6 +4,7 @@
 #include <cassert>
 #include <filesystem>
 #include <string>
+#include <array>
 #include <set>
 #include <directxtk/WICTextureLoader.h>
 
@@ -13,14 +14,18 @@
 
 #include "d3dUtil.h"
 #include "ResourceManager.h"
-
+#include "MathHelper.h"
 
 namespace resourceManager
 {
 	extern DirectX::SimpleMath::Matrix convertMatrix(const aiMatrix4x4& aiMatrix);
 
 	SkinnedModel::SkinnedModel(ID3D11Device* d3dDevice, const std::string& fileName)
+		: IndexBufferFormat(DXGI_FORMAT_R32_UINT)
+		, VertexStride(sizeof(vertex::PosNormalTexTanSkinned))
 	{
+		using namespace DirectX::SimpleMath;
+
 		Assimp::Importer importer;
 		importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, 0);    // $assimp_fbx$ 드 생.성안함
 		unsigned int importFlags = aiProcess_Triangulate |
@@ -36,28 +41,37 @@ namespace resourceManager
 		Vertices.reserve(1024);
 		Indices.reserve(1024);
 
-		std::function<void(aiNode*, int)> nodeRecursive = [this, scene, &nodeRecursive, &id](aiNode* node, int parentIndex)
-			{
-				BoneHierarchy.push_back(parentIndex);
+		NodeInorderTraversal.reserve(128);
 
+		std::function<void(aiNode*, int)> nodeRecursive = [this, scene, &nodeRecursive, &id](aiNode* node, size_t parentIndex)
+			{
+				// 노드 계층 구조 저장
+				SkinnedNode skinnedNode;
+				skinnedNode.ToParentMatrix = convertMatrix(node->mTransformation).Transpose();
+				skinnedNode.Name = node->mName.C_Str();
+				skinnedNode.ParentIndex = parentIndex;
+				skinnedNode.CurrentIndex = NodeInorderTraversal.size();
+				NodeInorderTraversal.push_back(skinnedNode);
+
+				// 메쉬(정점 데이터) 저장
 				for (UINT i = 0; i < node->mNumMeshes; ++i)
 				{
 					unsigned int meshIndex = node->mMeshes[i];
 					aiMesh* mesh = scene->mMeshes[meshIndex];
 
-					Subset subset;
+					SkinnedSubset subset;
 					subset.Id = id++;
 					subset.VertexCount = mesh->mNumVertices;
 					subset.FaceCount = mesh->mNumFaces;
 
+					skinnedNode.SubsetIndex.push_back(subset.Id);
+
 					if (subset.Id > 0)
 					{
-						const Subset& prev = SubsetTable[subset.Id - 1];
+						const SkinnedSubset& prev = SubsetTable[subset.Id - 1];
 						subset.VertexStart = prev.VertexStart + prev.VertexCount;
 						subset.FaceStart = prev.FaceStart + prev.FaceCount;
 					}
-
-					SubsetTable.push_back(subset);
 
 					for (UINT j = 0; j < mesh->mNumVertices; ++j)
 					{
@@ -102,14 +116,17 @@ namespace resourceManager
 						}
 					}
 
-					// 메쉬에 저장된 본 팔레트 정보가 내가 중위 순회로 처리한 것과 동일한지가 중요하다.
-					// 일단 하나 체크해본 결과 같음
-					// 애초에 본 애니메이션 하는 캐릭터라면 메쉬는 반드시 하나이려나?
+					// 메쉬에 관여한 본 저장
+					subset.Bones.reserve(mesh->mNumBones);
 					for (UINT j = 0; j < mesh->mNumBones; ++j)
 					{
-						BoneOffsetMatrix.push_back(convertMatrix(mesh->mBones[j]->mOffsetMatrix).Transpose());
+						SkinnedBone skinnedBone;
+						skinnedBone.Name = mesh->mBones[j]->mName.C_Str();
+						skinnedBone.OffsetMatrix = convertMatrix(mesh->mBones[j]->mOffsetMatrix).Transpose();
 
-						for (UINT k = 0; k < mesh->mBones[j ]->mNumWeights; ++k)
+						subset.Bones.push_back(skinnedBone);
+
+						for (UINT k = 0; k < mesh->mBones[j]->mNumWeights; ++k)
 						{
 							unsigned int vertexIndex = mesh->mBones[j]->mWeights[k].mVertexId + subset.VertexStart;
 							float vertexWeight = mesh->mBones[j]->mWeights[k].mWeight;
@@ -126,6 +143,9 @@ namespace resourceManager
 						}
 					}
 
+					SubsetTable.push_back(subset);
+
+					// 재질(겉면, 텍스처) 저장
 					aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
 					aiString texturePath;
@@ -142,8 +162,9 @@ namespace resourceManager
 
 					if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath) == AI_SUCCESS)
 					{
-						const char* fileName = strrchr(texturePath.C_Str(), '/') + 1;
-						auto curPath = basePath / fileName;
+						std::filesystem::path filePath = texturePath.C_Str();
+
+						auto curPath = basePath / filePath.filename();
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
 						SRVs[static_cast<size_t>(eMaterialTexture::Diffuse)].push_back(srv);
@@ -154,8 +175,9 @@ namespace resourceManager
 					}
 					if (material->GetTexture(aiTextureType_NORMALS, 0, &texturePath) == AI_SUCCESS)
 					{
-						const char* fileName = strrchr(texturePath.C_Str(), '/') + 1;
-						auto curPath = basePath / fileName;
+						std::filesystem::path filePath = texturePath.C_Str();
+
+						auto curPath = basePath / filePath.filename();
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
 						SRVs[static_cast<size_t>(eMaterialTexture::Normal)].push_back(srv);
@@ -166,8 +188,9 @@ namespace resourceManager
 					}
 					if (material->GetTexture(aiTextureType_SPECULAR, 0, &texturePath) == AI_SUCCESS)
 					{
-						const char* fileName = strrchr(texturePath.C_Str(), '/') + 1;
-						auto curPath = basePath / fileName;
+						std::filesystem::path filePath = texturePath.C_Str();
+
+						auto curPath = basePath / filePath.filename();
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
 						SRVs[static_cast<size_t>(eMaterialTexture::Specular)].push_back(srv);
@@ -179,8 +202,9 @@ namespace resourceManager
 					}
 					if (material->GetTexture(aiTextureType_OPACITY, 0, &texturePath) == AI_SUCCESS)
 					{
-						const char* fileName = strrchr(texturePath.C_Str(), '/') + 1;
-						auto curPath = basePath / fileName;
+						std::filesystem::path filePath = texturePath.C_Str();
+
+						auto curPath = basePath / filePath.filename();
 						ID3D11ShaderResourceView* srv = ResourceManager::GetInstance()->LoadTexture(curPath.c_str());
 
 						SRVs[static_cast<size_t>(eMaterialTexture::Opacity)].push_back(srv);
@@ -191,13 +215,78 @@ namespace resourceManager
 					}
 				}
 
-				int nodeIndex = BoneHierarchy.size();
 				for (UINT i = 0; i < node->mNumChildren; ++i)
 				{
-					nodeRecursive(node->mChildren[i], nodeIndex);
+					nodeRecursive(node->mChildren[i], skinnedNode.CurrentIndex);
 				}
 			};
-		nodeRecursive(scene->mRootNode, 0);
+
+		nodeRecursive(scene->mRootNode, (size_t)SkinnedNode::INVALID_INDEX);
+
+		// 본에 노드 인덱스 연결
+		std::map<std::string, size_t> nodeNameIndexMap;
+
+		for (const auto& skinnedNode : NodeInorderTraversal)
+		{
+			nodeNameIndexMap.insert({ skinnedNode.Name, skinnedNode.CurrentIndex });
+		}
+
+		for (auto& subset : SubsetTable)
+		{
+			for (auto& skinnedBone : subset.Bones)
+			{
+				auto find = nodeNameIndexMap.find(skinnedBone.Name);
+				assert(find != nodeNameIndexMap.end());
+
+				skinnedBone.NodeIndex = find->second;
+			}
+		}
+
+		// 애니메이션 로드
+		for (unsigned int i = 0; i < scene->mNumAnimations; ++i)
+		{
+			auto& currentAnimation = scene->mAnimations[i];
+
+			AnimationClip animClip;
+			auto totalFrame = currentAnimation->mDuration;
+			auto framePerSeconds = 1 / (currentAnimation->mTicksPerSecond);
+			animClip.Duration = totalFrame * framePerSeconds;
+			animClip.Name = currentAnimation->mName.C_Str();
+
+			for (unsigned int j = 0; j < currentAnimation->mNumChannels; ++j)
+			{
+				auto& currentChennel = currentAnimation->mChannels[j];
+
+				AnimationNode animationNode;
+				animationNode.Name = currentChennel->mNodeName.C_Str();
+
+				for (unsigned int k = 0; k < currentChennel->mNumPositionKeys; ++k)
+				{
+					KeyAnimation keyAnimation;
+
+					keyAnimation.Time = currentChennel->mPositionKeys[k].mTime * framePerSeconds;
+
+					keyAnimation.Position.x = currentChennel->mPositionKeys[k].mValue.x;
+					keyAnimation.Position.y = currentChennel->mPositionKeys[k].mValue.y;
+					keyAnimation.Position.z = currentChennel->mPositionKeys[k].mValue.z;
+
+					keyAnimation.Rotation.x = currentChennel->mRotationKeys[k].mValue.x;
+					keyAnimation.Rotation.y = currentChennel->mRotationKeys[k].mValue.y;
+					keyAnimation.Rotation.z = currentChennel->mRotationKeys[k].mValue.z;
+					keyAnimation.Rotation.w = currentChennel->mRotationKeys[k].mValue.w;
+
+					keyAnimation.Scaling.x = currentChennel->mScalingKeys[k].mValue.x;
+					keyAnimation.Scaling.y = currentChennel->mScalingKeys[k].mValue.y;
+					keyAnimation.Scaling.z = currentChennel->mScalingKeys[k].mValue.z;
+
+					animationNode.KeyAnimations.push_back(keyAnimation);
+				}
+
+				animClip.AnimationNodes.insert({ animationNode.Name, animationNode });
+			}
+
+			Animations.insert({ animClip.Name, animClip });
+		}
 
 		importer.FreeScene();
 
@@ -239,48 +328,106 @@ namespace resourceManager
 		cbd.CPUAccessFlags = 0;
 		cbd.MiscFlags = 0;
 
-		hr = d3dDevice->CreateBuffer(&cbd, NULL, &CB);
+		hr = d3dDevice->CreateBuffer(&cbd, NULL, &MaterialCB);
+		if (FAILED(hr)) {
+			assert(false);
+		}
+
+		cbd = {};
+		cbd.Usage = D3D11_USAGE_DEFAULT;
+		cbd.ByteWidth = sizeof(Matrix) * MAX_BONE_COUNT;
+		cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cbd.CPUAccessFlags = 0;
+		cbd.MiscFlags = 0;
+
+		hr = d3dDevice->CreateBuffer(&cbd, NULL, &BoneCB);
 		if (FAILED(hr)) {
 			assert(false);
 		}
 	}
 
-	void SkinnedModel::Draw(ID3D11DeviceContext* d3dContext)
+	SkinnedModel::~SkinnedModel()
 	{
-
+		ReleaseCOM(VB);
+		ReleaseCOM(IB);
+		ReleaseCOM(BoneCB);
+		ReleaseCOM(MaterialCB);
 	}
 
-	void SkinnedModel::GetFinalTransforms(const std::string& clipName, float timePos, std::vector<DirectX::SimpleMath::Matrix>* matrixPalette) const
+	void SkinnedModel::Draw(ID3D11DeviceContext* d3dContext, const std::string& clipName, float timePos)
 	{
 		using namespace DirectX::SimpleMath;
+		// 바인딩
+		UINT offset = 0;
+		d3dContext->IASetIndexBuffer(IB, IndexBufferFormat, 0);
+		d3dContext->IASetVertexBuffers(0, 1, &VB, &VertexStride, &offset);
+		d3dContext->VSSetConstantBuffers(1, 1, &BoneCB);
+		d3dContext->PSSetConstantBuffers(1, 1, &MaterialCB);
 
-		const size_t BONE_COUNT = BoneOffsetMatrix.size();
+		auto findedAnim = Animations.find(clipName);
+		assert(findedAnim != Animations.end());
 
-		std::vector<Matrix> toParents(BONE_COUNT);
-		std::vector<Matrix> toRoots(BONE_COUNT);
+		const AnimationClip& animClip = findedAnim->second;
 
-		auto find = Animations.find(clipName);
-
-		for (size_t i = 0; i < BONE_COUNT; ++i)
+		for (size_t i = 0; i < SubsetTable.size(); ++i)
 		{
-			toParents[i] = find->second.AnimationNodes[i].Evaluate(timePos);
-		}
+			// 본으로 로컬 매트릭스 갱신
+			for (const SkinnedBone& bone : SubsetTable[i].Bones)
+			{
+				auto find = animClip.AnimationNodes.find(bone.Name);
 
-		toRoots[0] = toParents[0];
+				if (find != animClip.AnimationNodes.end())
+				{
+					const AnimationNode& animNode = find->second;
 
-		for (UINT i = 1; i < BONE_COUNT; ++i)
-		{
-			Matrix toParent = toParents[i];
+					NodeInorderTraversal[bone.NodeIndex].ToParentMatrix = animNode.Evaluate(fmod(timePos, animClip.Duration));
+				}
+			}
 
-			int parentIndex = BoneHierarchy[i];
-			Matrix parentToRoot = toRoots[parentIndex];
+			// 노드 월드 매트릭스 갱신
+			NodeInorderTraversal[0].ToRootMatrix = NodeInorderTraversal[0].ToParentMatrix;
+			for (size_t j = 1; j < NodeInorderTraversal.size(); ++j)
+			{
+				SkinnedNode& curNode = NodeInorderTraversal[j];
+				const SkinnedNode& parentNode = NodeInorderTraversal[curNode.ParentIndex];
 
-			toRoots[i] = toParent * parentToRoot;
-		}
+				curNode.ToRootMatrix = curNode.ToParentMatrix * parentNode.ToRootMatrix;
+			}
 
-		for (UINT i = 0; i < BONE_COUNT; ++i)
-		{
-			(*matrixPalette)[i] = BoneOffsetMatrix[i] * toRoots[i];
+			// 본 팔레트 행렬 만들기, 상수 버퍼 반영
+
+			// 추후에 매번 벡터를 동적할당하는 
+			std::array<Matrix, MAX_BONE_COUNT> matrixPalette;
+			auto paletteIter = matrixPalette.begin();
+
+			for (const SkinnedBone& bone : SubsetTable[i].Bones)
+			{
+				const Matrix& boneToRoot = NodeInorderTraversal[bone.NodeIndex].ToRootMatrix;
+
+				// 오프셋 매트릭스는 정점을 뼈대 공간에서 다룰 수 있게 하고,
+				// 본의 로컬(애니메이션) + 본 부모의 루트(월드에 재배치)하는 흐름을 갖는다.
+				*paletteIter++ = (bone.OffsetMatrix * boneToRoot).Transpose();
+			}
+
+			if (!SubsetTable[i].Bones.empty())
+			{
+				d3dContext->UpdateSubresource(BoneCB, 0, 0, &matrixPalette[0], 0, 0);
+			}
+
+			// 텍스처 적용 그리기 호출
+			constexpr const size_t TEXTURE_SIZE = static_cast<size_t>(eMaterialTexture::Size);
+			ID3D11ShaderResourceView* srv[TEXTURE_SIZE];
+			int bUseTextures[TEXTURE_SIZE];
+
+			for (size_t j = 0; j < static_cast<size_t>(eMaterialTexture::Size); ++j)
+			{
+				srv[j] = SRVs[j][i];
+				bUseTextures[j] = srv[j] != nullptr;
+			}
+
+			d3dContext->UpdateSubresource(MaterialCB, 0, 0, &bUseTextures[0], 0, 0);
+			d3dContext->PSSetShaderResources(0, TEXTURE_SIZE, &srv[0]);
+			d3dContext->DrawIndexed(SubsetTable[i].FaceCount * 3, SubsetTable[i].FaceStart * 3, SubsetTable[i].VertexStart);
 		}
 	}
 }

@@ -2,9 +2,10 @@
 
 namespace resourceManager
 {
-	DirectX::SimpleMath::Matrix AnimationNode::Evaluate(double progressTime) const
+	DirectX::SimpleMath::Matrix AnimationNode::Evaluate(float progressTime) const
 	{
 		using namespace DirectX::SimpleMath;
+
 		Vector3 position = KeyAnimations[0].Position;
 		Quaternion rotation = KeyAnimations[0].Rotation;
 		Vector3 scaling = KeyAnimations[0].Scaling;
