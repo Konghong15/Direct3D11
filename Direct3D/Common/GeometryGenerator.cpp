@@ -1,10 +1,26 @@
-#include <cmath>
+#include "pch.h"
 
 #include "GeometryGenerator.h"
 #include "MathHelper.h"
 
 namespace common
 {
+	GeometryGenerator::Vertex::Vertex(Vector3 position, Vector3 normal, Vector3 tangent, Vector2 texture)
+		: Position(position)
+		, Normal(normal)
+		, TangentU(tangent)
+		, TexC(texture)
+	{
+	}
+
+	GeometryGenerator::Vertex::Vertex(float px, float py, float pz, float nx, float ny, float nz, float tanx, float tany, float tanz, float tx, float ty)
+		: Position(px, py, pz)
+		, Normal(nx, ny, nz)
+		, TangentU(tanx, tany, tanz)
+		, TexC(tx, ty)
+	{
+	}
+
 	void GeometryGenerator::CreateBox(float width, float height, float depth, MeshData* outMeshData)
 	{
 		Vertex v[24];

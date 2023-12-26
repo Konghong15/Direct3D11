@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cassert>
-
 #include "D3DUtil.h"
 
 namespace common

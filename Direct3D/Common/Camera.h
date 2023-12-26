@@ -1,7 +1,5 @@
 #pragma once
 
-#include <directxtk/SimpleMath.h>
-
 namespace common
 {
 	using DirectX::SimpleMath::Matrix;

@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include <directxtk/DDSTextureLoader.h>
 
 #include "Sky.h"

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <directxtk/SimpleMath.h>
-
 #include "d3dUtil.h"
 #include "LightHelper.h"
 

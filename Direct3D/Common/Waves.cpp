@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include <algorithm>
 
 #include "Waves.h"

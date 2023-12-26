@@ -145,6 +145,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="D3DHelper.h" />
     <ClInclude Include="D3DSample.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Mesh.h" />

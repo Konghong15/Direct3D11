@@ -1,10 +1,9 @@
 #pragma once
 
-#include <vector>
-#include <directxtk/SimpleMath.h>
-
 namespace common
 {
+	using namespace DirectX::SimpleMath;
+
 	class GeometryGenerator
 	{
 	public:
@@ -13,25 +12,13 @@ namespace common
 			Vertex() = default;
 			Vertex(const Vertex&) = default;
 			Vertex& operator=(const Vertex&) = default;
-			Vertex(DirectX::SimpleMath::Vector3 position, DirectX::SimpleMath::Vector3 normal, DirectX::SimpleMath::Vector3 tangent, DirectX::SimpleMath::Vector2 texture)
-				: Position(position)
-				, Normal(normal)
-				, TangentU(tangent)
-				, TexC(texture)
-			{
-			}
-			Vertex(float px, float py, float pz, float nx, float ny, float nz, float tanx, float tany, float tanz, float tx, float ty)
-				: Position(px, py, pz)
-				, Normal(nx, ny, nz)
-				, TangentU(tanx, tany, tanz)
-				, TexC(tx, ty)
-			{
-			}
+			Vertex(Vector3 position, Vector3 normal, Vector3 tangent, Vector2 texture);
+			Vertex(float px, float py, float pz, float nx, float ny, float nz, float tanx, float tany, float tanz, float tx, float ty);
 
-			DirectX::SimpleMath::Vector3 Position;
-			DirectX::SimpleMath::Vector3 Normal;
-			DirectX::SimpleMath::Vector3 TangentU;
-			DirectX::SimpleMath::Vector2 TexC;
+			Vector3 Position;
+			Vector3 Normal;
+			Vector3 TangentU;
+			Vector2 TexC;
 		};
 
 		struct MeshData

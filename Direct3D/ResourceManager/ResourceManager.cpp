@@ -70,7 +70,7 @@ namespace resourceManager
 
 	Model* ResourceManager::LoadModel(const std::wstring& fileName)
 	{
-		return LoadModel(common::D3DHelper::convert_from_wstring(fileName));
+		return LoadModel(common::D3DHelper::ConvertWStrToStr(fileName));
 	}
 
 	SkinnedModel* ResourceManager::LoadSkinnedModel(const std::string& fileName)
@@ -91,25 +91,25 @@ namespace resourceManager
 
 	SkinnedModel* ResourceManager::LoadSkinnedModel(const std::wstring& fileName)
 	{
-		return LoadSkinnedModel(common::D3DHelper::convert_from_wstring(fileName));
+		return LoadSkinnedModel(common::D3DHelper::ConvertWStrToStr(fileName));
 	}
 
 	ID3D11ShaderResourceView* ResourceManager::LoadTexture(const std::string& fileName)
 	{
-		return LoadTexture(common::D3DHelper::convert_to_wstring(fileName));
+		return LoadTexture(common::D3DHelper::ConvertStrToWStr(fileName));
 	}
 
 	ID3D11ShaderResourceView* ResourceManager::LoadTexture(const std::wstring& fileName)
 	{
 		ID3D11ShaderResourceView* SRV = nullptr;
 
-		auto find = mSRVs.find(common::D3DHelper::convert_from_wstring(fileName));
+		auto find = mSRVs.find(common::D3DHelper::ConvertWStrToStr(fileName));
 
 		if (find == mSRVs.end())
 		{
 			common::D3DHelper::CreateTextureFromFile(md3dDevice, fileName.c_str(), &SRV);
 
-			mSRVs.insert({ common::D3DHelper::convert_from_wstring(fileName), SRV });
+			mSRVs.insert({ common::D3DHelper::ConvertWStrToStr(fileName), SRV });
 		}
 		else
 		{

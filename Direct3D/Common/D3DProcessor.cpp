@@ -1,4 +1,5 @@
-#include <cassert>
+#include "pch.h"
+
 #include <WindowsX.h>
 #include <sstream>
 

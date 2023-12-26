@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include <fstream>
 #include <sstream>
-#include <DirectXMath.h>
 
 #include "Terrain.h"
 #include "Camera.h"

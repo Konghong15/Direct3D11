@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "MathHelper.h"
 
 namespace common

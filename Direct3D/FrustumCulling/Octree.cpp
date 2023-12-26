@@ -1,3 +1,5 @@
+#include <DirectXColors.h>
+#include <DirectXCollision.h>
 
 #include "Octree.h"
 #include "Basic32.h"
