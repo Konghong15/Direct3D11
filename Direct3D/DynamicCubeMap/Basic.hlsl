@@ -97,10 +97,8 @@ float4 PS(VertexOut pin) : SV_Target
 
 		if (gUseReflection)
 		{
-			float3 incident = -toEye;
-			float3 reflectionVector = reflect(incident, pin.NormalW);
-			// float3 refractVector = refract(incident, pin.NormalW, 0.95); 굴절
-			float4 reflectionColor = gCubeMap.Sample(gSamLinear, reflectionVector);
+			float3 reflectionVector = reflect(-toEye, pin.NormalW); // 시선벡터로 반사벡터를 구한후
+			float4 reflectionColor = gCubeMap.Sample(gSamLinear, reflectionVector); // 조회벡터로 사용
 
 			litColor += gMaterial.Reflect * reflectionColor;
 		}

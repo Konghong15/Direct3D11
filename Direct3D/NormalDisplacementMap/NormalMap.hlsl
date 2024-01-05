@@ -50,7 +50,7 @@ VertexOut VS(VertexIn vin)
 
 	vout.PosW = mul(float4(vin.PosL, 1.0f), gWorld).xyz;
 	vout.NormalW = mul(vin.NormalL, (float3x3)gWorldInvTranspose);
-	vout.TangentW = mul(vin.TangentL, (float3x3)gWorld);
+	vout.TangentW = mul(vin.TangentL, (float3x3)gWorldInvTranspose);
 
 	vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
 

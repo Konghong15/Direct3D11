@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <DirectXMath.h>
+#include <algorithm>
 
 #include "Terrain.h"
 #include "Camera.h"
@@ -44,10 +45,12 @@ namespace terrain
 	{
 		mInfo = initInfo;
 
+		// 정점은 셀보다 하나 많아야 올바르게 생성된다.
 		mNumPatchVertRows = ((mInfo.HeightmapHeight - 1) / CellsPerPatch) + 1;
 		mNumPatchVertCols = ((mInfo.HeightmapWidth - 1) / CellsPerPatch) + 1;
-
 		mNumPatchVertices = mNumPatchVertRows * mNumPatchVertCols;
+
+		// Cell은 정점보다 하나 적게 생성된다. 위랑 똑같은 말이긴 함
 		mNumPatchQuadFaces = (mNumPatchVertRows - 1) * (mNumPatchVertCols - 1);
 
 		buildTerrain(device);
@@ -66,7 +69,7 @@ namespace terrain
 		layerFilenames.push_back(mInfo.LayerMapFilename2);
 		layerFilenames.push_back(mInfo.LayerMapFilename3);
 		layerFilenames.push_back(mInfo.LayerMapFilename4);
-		// mLayerMapArraySRV = D3DHelper::CreateTexture2DArraySRV(device, dc, layerFilenames);
+		mLayerMapArraySRV = D3DHelper::CreateTexture2DArraySRV(device, dc, layerFilenames);
 
 		HR(DirectX::CreateDDSTextureFromFile(device, mInfo.BlendMapFilename.c_str(), 0, &mBlendMapSRV));
 	}
@@ -269,6 +272,7 @@ namespace terrain
 		mHeightmap.resize(mInfo.HeightmapHeight * mInfo.HeightmapWidth, 0);
 		for (UINT i = 0; i < mInfo.HeightmapHeight * mInfo.HeightmapWidth; ++i)
 		{
+			// 데이터를 정규화 한 후 scale로 조정한다.
 			mHeightmap[i] = (in[i] / 255.0f) * mInfo.HeightScale;
 		}
 	}
@@ -281,11 +285,11 @@ namespace terrain
 		{
 			for (UINT j = 0; j < mInfo.HeightmapWidth; ++j)
 			{
+				// average는 (현재 픽셀 + sum(인접한 픽셀 값)) / 개수
 				dest[i * mInfo.HeightmapWidth + j] = Average(i, j);
 			}
 		}
 
-		// Replace the old heightmap with the filtered one.
 		mHeightmap = dest;
 	}
 
@@ -336,7 +340,7 @@ namespace terrain
 	{
 		mPatchBoundsY.resize(mNumPatchQuadFaces);
 
-		// For each patch
+		// 모든 패치(셀 단위)를 순회하여 Bound Y를 구한다.
 		for (UINT i = 0; i < mNumPatchVertRows - 1; ++i)
 		{
 			for (UINT j = 0; j < mNumPatchVertCols - 1; ++j)
@@ -348,8 +352,7 @@ namespace terrain
 
 	void Terrain::CalcPatchBoundsY(UINT i, UINT j)
 	{
-		// Scan the heightmap values this patch covers and compute the min/max height.
-
+		// 셀 안에 들어간 패치만큼 순회하여 min, map를 찾는다.
 		UINT x0 = j * CellsPerPatch;
 		UINT x1 = (j + 1) * CellsPerPatch;
 
@@ -358,6 +361,7 @@ namespace terrain
 
 		float minY = +MathHelper::Infinity;
 		float maxY = -MathHelper::Infinity;
+
 		for (UINT y = y0; y <= y1; ++y)
 		{
 			for (UINT x = x0; x <= x1; ++x)
@@ -374,11 +378,13 @@ namespace terrain
 
 	void Terrain::BuildQuadPatchVB(ID3D11Device* device)
 	{
+		// 패치 제어점 만큼 정점 생성
 		std::vector<VertexTerrain> patchVertices(mNumPatchVertRows * mNumPatchVertCols);
 
 		float halfWidth = 0.5f * GetWidth();
 		float halfDepth = 0.5f * GetDepth();
 
+		// 셀의 너비는 (전체 셀 너비 / 샐 개수)
 		float patchWidth = GetWidth() / (mNumPatchVertCols - 1);
 		float patchDepth = GetDepth() / (mNumPatchVertRows - 1);
 		float du = 1.0f / (mNumPatchVertCols - 1);
@@ -386,10 +392,11 @@ namespace terrain
 
 		for (UINT i = 0; i < mNumPatchVertRows; ++i)
 		{
-			float z = halfDepth - i * patchDepth;
+			float z = halfDepth - i * patchDepth; // 화면 깊은쪽 부터
+
 			for (UINT j = 0; j < mNumPatchVertCols; ++j)
 			{
-				float x = -halfWidth + j * patchWidth;
+				float x = -halfWidth + j * patchWidth; // 왼쪽 부터
 
 				patchVertices[i * mNumPatchVertCols + j].Pos = Vector3(x, 0.0f, z);
 
@@ -402,10 +409,13 @@ namespace terrain
 		{
 			for (UINT j = 0; j < mNumPatchVertCols - 1; ++j)
 			{
+				// 패치를 감싸는 높이의 최소/최대를 미리 계산한 것을 적용해준다.
 				UINT patchID = i * (mNumPatchVertCols - 1) + j;
 				patchVertices[i * mNumPatchVertCols + j].BoundsY = mPatchBoundsY[patchID];
 			}
 		}
+
+		// d3d vertex buffer 생성
 
 		D3D11_BUFFER_DESC vbd;
 		vbd.Usage = D3D11_USAGE_IMMUTABLE;
@@ -422,25 +432,27 @@ namespace terrain
 
 	void Terrain::BuildQuadPatchIB(ID3D11Device* device)
 	{
-		std::vector<USHORT> indices(mNumPatchQuadFaces * 4); // 4 indices per quad face
+		// 제어점 패치 형태라서 Face당 4개의 색인을 갖는다. 
+		std::vector<USHORT> indices(mNumPatchQuadFaces * 4);
 
-		// Iterate over each quad and compute indices.
 		int k = 0;
 		for (UINT i = 0; i < mNumPatchVertRows - 1; ++i)
 		{
 			for (UINT j = 0; j < mNumPatchVertCols - 1; ++j)
 			{
-				// Top row of 2x2 quad patch
+				// 윗 정점 두개
 				indices[k] = i * mNumPatchVertCols + j;
 				indices[k + 1] = i * mNumPatchVertCols + j + 1;
 
-				// Bottom row of 2x2 quad patch
+				// 아랫 정점 두개
 				indices[k + 2] = (i + 1) * mNumPatchVertCols + j;
 				indices[k + 3] = (i + 1) * mNumPatchVertCols + j + 1;
 
-				k += 4; // next quad
+				k += 4;
 			}
 		}
+
+		// d3d index buffer 생성
 
 		D3D11_BUFFER_DESC ibd;
 		ibd.Usage = D3D11_USAGE_IMMUTABLE;
@@ -470,9 +482,7 @@ namespace terrain
 		texDesc.CPUAccessFlags = 0;
 		texDesc.MiscFlags = 0;
 
-		// // float is defined in xnamath.h, for storing 16-bit float.
-		// std::vector<float> hmap(mHeightmap.size());
-		// std::transform(mHeightmap.begin(), mHeightmap.end(), hmap.begin(), XMConvertFloatToHalf);
+		// 16비트 float 만들기 로직
 
 		D3D11_SUBRESOURCE_DATA data;
 		data.pSysMem = &mHeightmap[0];
@@ -486,10 +496,9 @@ namespace terrain
 		srvDesc.Format = texDesc.Format;
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MostDetailedMip = 0;
-		srvDesc.Texture2D.MipLevels = -1;
+		srvDesc.Texture2D.MipLevels = -1; // 최대 밉맵 수, -1은 모든 밉맵 레벨 표시
 		HR(device->CreateShaderResourceView(hmapTex, &srvDesc, &mHeightMapSRV));
 
-		// SRV saves reference.
 		ReleaseCOM(hmapTex);
 	}
 }

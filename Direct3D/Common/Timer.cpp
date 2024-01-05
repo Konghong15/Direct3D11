@@ -69,9 +69,9 @@ namespace common
 			return;
 		}
 
-		mPrevTime = mCurrTime;
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&mCurrTime));
 		mDeltaTime = (mCurrTime - mPrevTime) * mSecondsPerCount;
+		mPrevTime = mCurrTime;
 
 		if (mDeltaTime < 0.0)
 		{

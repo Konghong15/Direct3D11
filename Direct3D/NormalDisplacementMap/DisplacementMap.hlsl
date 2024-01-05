@@ -22,11 +22,11 @@ cbuffer cbPerFrame : register(b1)
 	bool gUseLight;
 	bool gUseFog;
 
-	float gHeightScale;
-	float gMaxTessDistance;
-	float gMinTessDistance;
-	float gMaxTessFactor;
-	float gMinTessFactor;
+	float gHeightScale; // 높이맵 가중치
+	float gMaxTessDistance; // 테셀레이션 최대 거리
+	float gMinTessDistance; // 테셀레이션 최소 거리
+	float gMaxTessFactor; // 테셀레이션 최대 계수
+	float gMinTessFactor; // 테셀레이션 최소 계수
 }
 
 Texture2D gDiffuseMap : register(t0);
@@ -64,8 +64,8 @@ VertexOut VS(VertexIn vin)
 	float d = distance(vout.PosW, gEyePosW);
 
 	// 거리 비율 구한 후 계수에 가중치로 사용
-	float tess = saturate((gMinTessDistance - d) / (gMinTessDistance - gMaxTessDistance));
-	vout.TessFactor = gMinTessFactor + tess * (gMaxTessFactor - gMinTessFactor);
+	float tessRatio = saturate((gMinTessDistance - d) / (gMinTessDistance - gMaxTessDistance));
+	vout.TessFactor = gMinTessFactor + tessRatio * (gMaxTessFactor - gMinTessFactor);
 
 	return vout;
 }
@@ -173,6 +173,8 @@ float4 PS(DomainOut pin) : SV_Target
 	}
 
 	float3 normalMapSample = gNormalMap.Sample(gSamLinear, pin.Tex).rgb;
+
+	// 정규화된 월드 노말과 탄젠트만 전달한다
 	float3 bumpedNormalW = NormalSampleToWorldSpace(normalMapSample, pin.NormalW, pin.TangentW);
 
 	float4 litColor = texColor;

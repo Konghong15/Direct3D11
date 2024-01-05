@@ -380,9 +380,16 @@ namespace computeShaderBlur
 		md3dContext->IASetVertexBuffers(0, 1, &mWavesVB, &stride, &offset);
 		md3dContext->IASetIndexBuffer(mWavesIB, DXGI_FORMAT_R32_UINT, 0);
 		md3dContext->PSSetShaderResources(0, 1, &mWavesMapSRV);
-		md3dContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
+
+		md3dContext->OMSetBlendState(
+			RenderStates::TransparentBS, // 랜더스테이트
+			blendFactor, // factor
+			0xffffffff); // 다중 표본화 샘플 마스크
 		md3dContext->DrawIndexed(3 * mWaves.GetTriangleCount(), 0, 0);
-		md3dContext->OMSetBlendState(0, blendFactor, 0xffffffff);
+		md3dContext->OMSetBlendState(
+			NULL, // 기본 블랜드 스테이트로 설정
+			blendFactor,
+			0xffffffff);
 	}
 
 	void D3DSample::drawScreenQuad()

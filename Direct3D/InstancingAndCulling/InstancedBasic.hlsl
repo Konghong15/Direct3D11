@@ -25,9 +25,9 @@ struct VertexIn
 	float3 PosL     : POSITION;
 	float3 NormalL  : NORMAL;
 	float2 Tex      : TEXCOORD;
-	row_major float4x4 World  : WORLD;
-	float4 Color    : COLOR;
-	uint InstanceId : SV_InstanceID;
+	row_major float4x4 World  : WORLD; // 인스턴싱을 위한 데이터들
+	float4 Color    : COLOR;		// 인스턴싱을 위한 데이터들
+	uint InstanceId : SV_InstanceID; // 인스턴스별 ID
 };
 
 struct VertexOut

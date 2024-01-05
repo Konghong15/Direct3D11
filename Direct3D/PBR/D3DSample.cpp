@@ -261,8 +261,6 @@ namespace initalization
 		}
 
 
-
-
 		// Update shading constant buffer (for pixel shader).
 		{
 			CBPixel shadingConstants;

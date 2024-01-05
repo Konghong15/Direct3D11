@@ -12,7 +12,11 @@ namespace common
 	{
 		using namespace DirectX::SimpleMath;
 
-		HR(DirectX::CreateDDSTextureFromFile(device, cubemapFilename.c_str(), NULL, &mCubeMapSRV));
+		// 기존 것과 동일한 방식으로 로딩한다.
+		HR(DirectX::CreateDDSTextureFromFile(device,
+			cubemapFilename.c_str(),
+			NULL, 
+			&mCubeMapSRV));
 
 		GeometryGenerator::MeshData sphere;
 		GeometryGenerator::CreateSphere(skySphereRadius, 30, 30, &sphere);
@@ -70,6 +74,7 @@ namespace common
 
 		// updatesubresource 
 		// Effects::SkyFX->SetWorldViewProj(WVP); 일단 임시로 처리 나중에 연결 방법 구성
+		// 바인딩 또한 동일하다.
 		dc->VSSetShaderResources(0, 1, &mCubeMapSRV);
 		dc->PSSetShaderResources(0, 1, &mCubeMapSRV);
 

@@ -134,7 +134,7 @@ namespace picking
 		UINT stride = sizeof(Basic32);
 		UINT offset = 0;
 
-		md3dContext->IASetInputLayout(mBasic32);
+		md3dContext->IASetInputLayout(mBasic32); 
 		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		md3dContext->IASetVertexBuffers(0, 1, &mMeshVB, &stride, &offset);
 		md3dContext->IASetIndexBuffer(mMeshIB, DXGI_FORMAT_R32_UINT, 0);
@@ -403,31 +403,29 @@ namespace picking
 
 	void D3DSample::pick(int sx, int sy)
 	{
-		Matrix P = mCam.GetProj();
+		Matrix P = mCam.GetProj(); // 투영 행렬을 읽어온다.
 
-		float vx = (+2.0f * sx / mWidth - 1.0f) / P(0, 0);
-		float vy = (-2.0f * sy / mHeight + 1.0f) / P(1, 1);
+		float vx = (+2.0f * sx / mWidth - 1.0f) *  P(0, 0) / P(1, 1); // 화면공간 -> 투영 공간 x
+		float vy = (-2.0f * sy / mHeight + 1.0f);// / P(1, 1); // 화면공간 -> 투영 공간 y
+		float vz = 1 / P(1, 1); // cot(@/2)
 
-		Vector3 rayOrigin = { 0.0f, 0.0f, 0.0f };
-		Vector3 rayDir = { vx, vy, 1.0f };
+		Vector3 rayOrigin = { 0.0f, 0.0f, 0.0f }; // 투영공간의 원점
+		Vector3 rayDir = { vx, vy, vz }; // 투영공간의 방향 벡터
+		Ray ray(rayOrigin, rayDir); // 투영공간에서 선택 반직선
 
-		Matrix invView;
-		mCam.GetView().Invert(invView);
+		const Matrix WV = mMeshWorld * mCam.GetView();
+		Matrix InvWV;
+		WV.Invert(InvWV); // View -> Local Matrix
 
-		Matrix invWorld;
-		mMeshWorld.Invert(invWorld);
+		// 로컬공간에서 선택 반직선
+		ray.position = Vector3::Transform(ray.position, InvWV);
+		ray.direction = Vector3::TransformNormal(ray.direction, InvWV);
+		ray.direction.Normalize();
 
-		Matrix toLocal = invView * invWorld;
-
-		rayOrigin = Vector3::Transform(rayOrigin, toLocal);
-		rayDir = Vector3::TransformNormal(rayDir, toLocal);
-		rayDir.Normalize();
-
+		// 최소 거리 삼각형 찾기
 		mPickedTriangle = -1;
 		float tmin = 0.0f;
-
-		Ray ray(rayOrigin, rayDir);
-		if (ray.Intersects(mMeshBox, tmin))
+		if (ray.Intersects(mMeshBox, tmin)) // 바운딩 볼륨을 먼저 검사한다.
 		{
 			tmin = MathHelper::Infinity;
 			for (UINT i = 0; i < mMeshIndices.size() / 3; ++i)

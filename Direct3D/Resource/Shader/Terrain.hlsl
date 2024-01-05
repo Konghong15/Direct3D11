@@ -92,7 +92,7 @@ struct PatchTess
 	float InsideTess[2] : SV_InsideTessFactor;
 };
 
-PatchTess ConstantHS(InputPatch<VertexOut, 4> patch, uint patchID : SV_PrimitiveID)
+PatchTess main(InputPatch<VertexOut, 4> patch, uint patchID : SV_PrimitiveID)
 {
 	PatchTess pt;
 
@@ -146,7 +146,7 @@ struct HullOut
 [partitioning("fractional_even")]
 [outputtopology("triangle_cw")]
 [outputcontrolpoints(4)]
-[patchconstantfunc("ConstantHS")]
+[patchconstantfunc("main")]
 [maxtessfactor(64.0f)]
 HullOut HS(InputPatch<VertexOut, 4> p,
 	uint i : SV_OutputControlPointID,

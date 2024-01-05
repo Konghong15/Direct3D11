@@ -84,28 +84,29 @@ namespace terrain
 	}
 	void D3DSample::Update(float deltaTime)
 	{
+		const float MOVE_SPEED = 100.f;
+
 		if (GetAsyncKeyState('W') & 0x8000)
-			mCam.TranslateLook(10.0f * deltaTime);
+			mCam.TranslateLook(MOVE_SPEED * deltaTime);
 
 		if (GetAsyncKeyState('S') & 0x8000)
-			mCam.TranslateLook(-10.0f * deltaTime);
+			mCam.TranslateLook(-MOVE_SPEED * deltaTime);
 
 		if (GetAsyncKeyState('A') & 0x8000)
-			mCam.TranslateRight(-10.0f * deltaTime);
+			mCam.TranslateRight(-MOVE_SPEED * deltaTime);
 
 		if (GetAsyncKeyState('D') & 0x8000)
-			mCam.TranslateRight(10.0f * deltaTime);
+			mCam.TranslateRight(MOVE_SPEED * deltaTime);
 
 		if (GetAsyncKeyState('2') & 0x8000)
 			mWalkCamMode = true;
 		if (GetAsyncKeyState('3') & 0x8000)
 			mWalkCamMode = false;
 
-		if (mWalkCamMode)
 		{
 			Vector3 camPos = mCam.GetPosition();
 			float y = mTerrain.GetHeight(camPos.x, camPos.z);
-			mCam.SetPosition(camPos.x, y + 2.0f, camPos.z);
+			mCam.SetPosition(camPos.x, y + 20.0f, camPos.z);
 		}
 
 		mCam.UpdateViewMatrix();

@@ -19,10 +19,17 @@ namespace common
 
 		for (UINT i = 0; i < SIZE; ++i)
 		{
-			HR(DirectX::CreateDDSTextureFromFile(device
-				, filenames[i].c_str()
-				, (ID3D11Resource**)&srcTex[i]
-				, nullptr));
+			DirectX::CreateDDSTextureFromFileEx(device,
+				filenames[i].c_str(),
+				1024 * 1024,
+				D3D11_USAGE_STAGING,
+				0,
+				D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ,
+				0,
+				DirectX::DDS_LOADER_FORCE_SRGB,
+				(ID3D11Resource**)&srcTex[i],
+				nullptr
+			);
 		}
 
 		D3D11_TEXTURE2D_DESC texElementDesc;
@@ -53,7 +60,17 @@ namespace common
 		{
 			for (UINT j = 0; j < texElementDesc.MipLevels; ++j)
 			{
-				context->CopySubresourceRegion(texArray, D3D11CalcSubresource(j, i, texElementDesc.MipLevels), 0, 0, 0, srcTex[i], j, NULL);
+				D3D11_MAPPED_SUBRESOURCE mappedTex2D;
+				HR(context->Map(srcTex[i], j, D3D11_MAP_READ, 0, &mappedTex2D));
+
+				context->UpdateSubresource(texArray,
+					D3D11CalcSubresource(j, i, texElementDesc.MipLevels),
+					0,
+					mappedTex2D.pData,
+					mappedTex2D.RowPitch,
+					mappedTex2D.DepthPitch);
+
+				context->Unmap(srcTex[i], j);
 			}
 		}
 

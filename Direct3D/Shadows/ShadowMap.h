@@ -1,5 +1,7 @@
 #pragma once
 
+#include <directxtk/SimpleMath.h>
+
 #include "D3DUtil.h"
 
 namespace shadows

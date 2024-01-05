@@ -123,7 +123,7 @@ namespace geometryShader
 		treeFilenames.push_back(L"../Resource/Textures/tree3.dds");
 		treeFilenames.push_back(L"../Resource/Textures/tree1.dds");
 		treeFilenames.push_back(L"../Resource/Textures/tree2.dds");
-		treeFilenames.push_back(L"../Resource/Textures/tree0.dds");
+		treeFilenames.push_back(L"../Resource/Textures/tree3.dds");
 
 		mTreeTextureMapArraySRV = D3DHelper::CreateTexture2DArraySRV(md3dDevice, md3dContext, treeFilenames);
 
@@ -366,33 +366,33 @@ namespace geometryShader
 		samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		md3dDevice->CreateSamplerState(&samplerDesc, &mLinearSamplerClamp);
 
-		HR(CompileShaderFromFile(L"../Resource/Shader/StencilingVS.hlsl", "main", "vs_5_0", &mVertexShaderBlobBasic32));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/StencilingVS.hlsl", "main", "vs_5_0", &mVertexShaderBlobBasic32));
 		md3dDevice->CreateVertexShader(mVertexShaderBlobBasic32->GetBufferPointer()
 			, mVertexShaderBlobBasic32->GetBufferSize()
 			, NULL
 			, &mVertexShaderBasic32);
 
-		HR(CompileShaderFromFile(L"../Resource/Shader/BillboardVS.hlsl", "main", "vs_5_0", &mVertexShaderBlobSprite));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/BillboardVS.hlsl", "main", "vs_5_0", &mVertexShaderBlobSprite));
 		md3dDevice->CreateVertexShader(mVertexShaderBlobSprite->GetBufferPointer()
 			, mVertexShaderBlobSprite->GetBufferSize()
 			, NULL
 			, &mVertexShaderSprite);
 
 		ID3DBlob* geoShaderBlob = nullptr;
-		HR(CompileShaderFromFile(L"../Resource/Shader/BillboardGS.hlsl", "main", "gs_5_0", &geoShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/BillboardGS.hlsl", "main", "gs_5_0", &geoShaderBlob));
 		md3dDevice->CreateGeometryShader(geoShaderBlob->GetBufferPointer()
 			, geoShaderBlob->GetBufferSize()
 			, NULL
 			, &mGeometryShader);
 
 		ID3DBlob* pixelShaderBlob = nullptr;
-		HR(CompileShaderFromFile(L"../Resource/Shader/StencilingPS.hlsl", "main", "ps_5_0", &pixelShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/StencilingPS.hlsl", "main", "ps_5_0", &pixelShaderBlob));
 		md3dDevice->CreatePixelShader(pixelShaderBlob->GetBufferPointer()
 			, pixelShaderBlob->GetBufferSize()
 			, NULL
 			, &mPixelShaderBasic32);
 
-		HR(CompileShaderFromFile(L"../Resource/Shader/BillboardPS.hlsl", "main", "ps_5_0", &pixelShaderBlob));
+		HR(D3DHelper::CompileShaderFromFile(L"../Resource/Shader/BillboardPS.hlsl", "main", "ps_5_0", &pixelShaderBlob));
 		md3dDevice->CreatePixelShader(pixelShaderBlob->GetBufferPointer()
 			, pixelShaderBlob->GetBufferSize()
 			, NULL

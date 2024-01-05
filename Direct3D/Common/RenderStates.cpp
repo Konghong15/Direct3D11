@@ -69,10 +69,10 @@ namespace common
 
 		// AlphaToCoverageBS
 		D3D11_BLEND_DESC alphaToCoverageDesc = { 0, };
-		alphaToCoverageDesc.AlphaToCoverageEnable = true;
-		alphaToCoverageDesc.IndependentBlendEnable = false; // 렌더 타겟 여러개 둘 때 키는 옵션 
-		alphaToCoverageDesc.RenderTarget[0].BlendEnable = false;
-		alphaToCoverageDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		alphaToCoverageDesc.AlphaToCoverageEnable = true; // 다중샘플링 시에 알파 포괄도 변환 여부
+		alphaToCoverageDesc.IndependentBlendEnable = false; // 렌더 대상을 하나만 쓸 때 false
+		alphaToCoverageDesc.RenderTarget[0].BlendEnable = false; // 혼합을 사용하지 않음
+		alphaToCoverageDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; // 모두 쓰기
 		HR(device->CreateBlendState(&alphaToCoverageDesc, &AlphaToCoverageBS));
 
 		// TransparentBS

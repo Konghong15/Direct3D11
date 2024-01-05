@@ -180,7 +180,7 @@ namespace shadows
 
 		static float s_time = 0.f;
 		s_time += 0.001f;
-		mLightRotationAngle = s_time; // 0.1f * deltaTime;
+		mLightRotationAngle += deltaTime; // 0.1f * deltaTime;
 
 		XMMATRIX R = XMMatrixRotationY(mLightRotationAngle);
 		for (int i = 0; i < 3; ++i)

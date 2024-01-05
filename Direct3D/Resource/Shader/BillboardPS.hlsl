@@ -20,8 +20,9 @@ cbuffer cbPerObject : register(b1)
 	Material gMaterial;
 }; 
 
-Texture2DArray gTreeMapArray : register(t0);
-SamplerState gSamLinearClamp : register(s0);
+Texture2D gTexture[4];
+Texture2DArray gTreeMapArray : register(t0); // 변수로 샘플링을 할 수 있어서, id 0
+SamplerState gSamLinearClamp : register(s0); 
 
 struct PS_INPUT
 {
@@ -29,7 +30,7 @@ struct PS_INPUT
     float3 PosW    : POSITION;
     float3 NormalW : NORMAL;
     float2 Tex     : TEXCOORD;
-    uint   PrimID  : SV_PrimitiveID;
+    uint   PrimID  : SV_PrimitiveID; // 시스템 쪽에서 전달해주는 ID;
 };
 
 float4 main(PS_INPUT pin) : SV_Target
@@ -47,7 +48,7 @@ float4 main(PS_INPUT pin) : SV_Target
 	{
 		float3 uvw = float3(pin.Tex, pin.PrimID % 4);
 		texColor = gTreeMapArray.Sample(gSamLinearClamp, uvw);
-	
+
 		clip(texColor.a - 0.05f);
 	}
 	 
@@ -72,7 +73,7 @@ float4 main(PS_INPUT pin) : SV_Target
 		litColor =  texColor * (ambient + diffuse) + spec;
 	}
 
-	litColor.a = gMaterial.Diffuse.a * texColor.a;
+	litColor.a = texColor.a;
 
     return litColor;
 }

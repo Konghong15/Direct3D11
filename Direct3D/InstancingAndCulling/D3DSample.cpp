@@ -125,9 +125,10 @@ namespace instancingAndCulling
 
 			for (UINT i = 0; i < mInstancedData.size(); ++i)
 			{
-				Matrix W = mInstancedData[i].World;
+				const auto& instancedData = mInstancedData[i];
+
 				Matrix invWorld;
-				W.Invert(invWorld);
+				instancedData.World.Invert(invWorld);
 
 				Matrix toLocal = invView * invWorld;
 				BoundingFrustum localspaceFrustum;
@@ -135,7 +136,7 @@ namespace instancingAndCulling
 
 				if (localspaceFrustum.Intersects(mSkullBox))
 				{
-					dataView[mVisibleObjectCount++] = mInstancedData[i];
+					dataView[mVisibleObjectCount++] = instancedData;
 				}
 			}
 
@@ -196,11 +197,12 @@ namespace instancingAndCulling
 
 		md3dContext->UpdateSubresource(mPerObjectCB, 0, 0, &mCBPerObject, 0, 0);
 
-		UINT stride[2] = { sizeof(Basic32), sizeof(InstancedData) }; // 데이터 두개 연결해두고
-		UINT offset[2] = { 0,0 };
-		ID3D11Buffer* vbs[2] = { mSkullVB, mInstancedBuffer }; // 버퍼도 두개를 연결한다.
-		md3dContext->IASetInputLayout(mInstancedBasic32);
 		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		UINT stride[2] = { sizeof(Basic32), sizeof(InstancedData) };
+		UINT offset[2] = { 0, 0 };
+		ID3D11Buffer* vbs[2] = { mSkullVB, mInstancedBuffer };
+		md3dContext->IASetInputLayout(mInstancedBasic32);
 		md3dContext->IASetVertexBuffers(0, 2, vbs, stride, offset);
 		md3dContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
 
@@ -211,7 +213,12 @@ namespace instancingAndCulling
 		md3dContext->VSSetShader(mVertexShader, 0, 0);
 		md3dContext->PSSetShader(mPixelShader, 0, 0);
 
-		md3dContext->DrawIndexedInstanced(mSkullIndexCount, mVisibleObjectCount, 0, 0, 0);
+		md3dContext->DrawIndexedInstanced(
+			mSkullIndexCount, // 인스턴스의 색인 개수
+			mVisibleObjectCount, // 인스턴스 개수
+			0, // 색인 버퍼 offset
+			0, // 기준 정점 offset
+			0); // 인스턴스 버퍼의 offset
 
 		HR(mSwapChain->Present(0, 0));
 	}
@@ -301,7 +308,10 @@ namespace instancingAndCulling
 			{ "WORLD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 			{ "WORLD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 			{ "WORLD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 64,  D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 64,
+				D3D11_INPUT_PER_INSTANCE_DATA, // 인스턴스 별 자료를 의미한다.
+				1 // 인스턴스별 자료 원소 하나당 그릴 인스턴스 수를 의미한다.
+			}
 		};
 
 		HR(md3dDevice->CreateInputLayout(
@@ -434,7 +444,7 @@ namespace instancingAndCulling
 			}
 		}
 
-		// 왜 정점 버퍼 크기를 요렇게 잡지?
+		// 인스턴싱될 데이터 크기만큼 미리 버퍼를 잡아서 생성한다.
 		D3D11_BUFFER_DESC vbd;
 		vbd.Usage = D3D11_USAGE_DYNAMIC;
 		vbd.ByteWidth = sizeof(InstancedData) * mInstancedData.size();
@@ -442,6 +452,7 @@ namespace instancingAndCulling
 		vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		vbd.MiscFlags = 0;
 		vbd.StructureByteStride = 0;
+
 		D3D11_SUBRESOURCE_DATA vinitData;
 		vinitData.pSysMem = &mInstancedData[0];
 

@@ -94,21 +94,27 @@ namespace terrain
 	private:
 		static const int CellsPerPatch = 64;
 
+		// 상수 버퍼 만드는 게 귀찮았다.
 		PerObjectTerrain mPerObjectTerrain;
 		PerFrameTerrain mPerFrameTerrain;
 		ID3D11Buffer* mFrameTerrainCB;
 		ID3D11Buffer* mObjectTerrainCB;
+
+		// 생성한 셰이더를 다 바인딩할 거라 귀찮았다.
 		ID3D11VertexShader* mTerrainVS;
 		ID3D11HullShader* mTerrainHS;
 		ID3D11DomainShader* mTerrainDS;
 		ID3D11PixelShader* mTerrainPS;
 		ID3D11InputLayout* mTerrainIL;
+
+		// 샘플러 스테이트도 랜더 스테이트로 넣어두자, 참조해서 쓰도록
 		ID3D11SamplerState* mSamLinear;
 		ID3D11SamplerState* mSamHeightMap;
 
 		ID3D11Buffer* mQuadPatchVB;
 		ID3D11Buffer* mQuadPatchIB;
 
+		// 문자열 하나 전달하면 알아서 생성되도록
 		ID3D11ShaderResourceView* mLayerMapArraySRV;
 		ID3D11ShaderResourceView* mBlendMapSRV;
 		ID3D11ShaderResourceView* mHeightMapSRV;
@@ -144,30 +150,43 @@ namespace terrain
 	}
 	float Terrain::GetHeight(float x, float z)const
 	{
-		float c = (x + 0.5f * GetWidth()) / mInfo.CellSpacing;
+		// 월드 x, y 좌표 정보를 통해 낱칸의 색인을 구한다.
+		// 너비의 절반을 x에 곱하고, 셀 크기로 나눠주면 부동 소수점 좌표가 구해진다.
+		float c = (x + 0.5f * GetWidth()) / mInfo.CellSpacing; 
 		float d = (z - 0.5f * GetDepth()) / -mInfo.CellSpacing;
 
+		// 버림으로 낮은 색인을 구해온다.
 		int row = (int)floorf(d);
 		int col = (int)floorf(c);
 
+		// A B
+		// C D
 		float A = mHeightmap[row * mInfo.HeightmapWidth + col];
 		float B = mHeightmap[row * mInfo.HeightmapWidth + col + 1];
 		float C = mHeightmap[(row + 1) * mInfo.HeightmapWidth + col];
 		float D = mHeightmap[(row + 1) * mInfo.HeightmapWidth + col + 1];
 
+		// 포함된 삼각형을 구하기 위해 셀 내의 좌표를 구한다.
 		float s = c - (float)col;
 		float t = d - (float)row;
 
+		// 이 합이 1보다 작다는 것은 위쪽 삼각형을 의미한다.
 		if (s + t <= 1.0f)
 		{
+			// A -> B
+			// C
 			float uy = B - A;
 			float vy = C - A;
+
 			return A + s * uy + t * vy;
 		}
 		else
 		{
+			//      B
+			// C <- D
 			float uy = C - D;
 			float vy = B - D;
+
 			return D + (1.0f - s) * uy + (1.0f - t) * vy;
 		}
 	}

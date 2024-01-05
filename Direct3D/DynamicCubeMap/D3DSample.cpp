@@ -200,9 +200,10 @@ namespace dynamicCubeMap
 		assert(md3dContext);
 		assert(mSwapChain);
 
-		ID3D11RenderTargetView* renderTargets[1];
+		ID3D11RenderTargetView* renderTargets[1] = {};
 
 		md3dContext->RSSetViewports(1, &mCubeMapViewport);
+
 		for (int i = 0; i < 6; ++i)
 		{
 			md3dContext->ClearRenderTargetView(mDynamicCubeMapRTV[i], reinterpret_cast<const float*>(&Silver));
@@ -211,23 +212,22 @@ namespace dynamicCubeMap
 			renderTargets[0] = mDynamicCubeMapRTV[i];
 			md3dContext->OMSetRenderTargets(1, renderTargets, mDynamicCubeMapDSV);
 
-			drawScene(mCubeMapCamera[i], false);
+			drawScene(mCubeMapCamera[i], false); // 마지막 인수는 가운데 물체를 그릴지 말지
 		}
 
-		// Restore old viewport and render targets.
+		// 기존 뷰포트와 렌더 대상 바인딩
 		md3dContext->RSSetViewports(1, &mScreenViewport);
 		renderTargets[0] = mRenderTargetView;
 		md3dContext->OMSetRenderTargets(1, renderTargets, mDepthStencilView);
-
-		// Have hardware generate lower mipmap levels of cube map.
-		md3dContext->GenerateMips(mDynamicCubeMapSRV);
-
-		// Now draw the scene as normal, but with the center sphere.
 		md3dContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Silver));
 		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+		// 하위 밉맵 수준 생성
+		md3dContext->GenerateMips(mDynamicCubeMapSRV);
+
 		drawScene(mCam, true);
 
+		// 입방체 맵 바인딩 해제
 		ID3D11ShaderResourceView* SRV = nullptr;
 		md3dContext->PSSetShaderResources(1, 1, &SRV);
 
@@ -468,13 +468,12 @@ namespace dynamicCubeMap
 		md3dContext->RSSetState(0);
 		md3dContext->OMSetDepthStencilState(0, 0);
 	}
+
 	void D3DSample::buildCubeFaceCamera(float x, float y, float z)
 	{
-		// Generate the cube map about the given position.
+		// 카메라 정보를 생성한다
 		Vector3 center(x, y, z);
-		Vector3 worldUp(0.0f, 1.0f, 0.0f);
 
-		// Look along each coordinate axis.
 		Vector3 targets[6] =
 		{
 			Vector3(x + 1.0f, y, z), // +X
@@ -485,8 +484,6 @@ namespace dynamicCubeMap
 			Vector3(x, y, z - 1.0f)  // -Z
 		};
 
-		// Use world up vector (0,1,0) for all directions except +Y/-Y.  In these cases, we
-		// are looking down +Y or -Y, so we need a different "up" vector.
 		Vector3 ups[6] =
 		{
 			Vector3(0.0f, 1.0f, 0.0f),  // +X
@@ -504,6 +501,7 @@ namespace dynamicCubeMap
 			mCubeMapCamera[i].UpdateViewMatrix();
 		}
 	}
+
 	void D3DSample::buildDynamicCubeMapViews()
 	{
 		//
@@ -511,17 +509,18 @@ namespace dynamicCubeMap
 		//
 
 		D3D11_TEXTURE2D_DESC texDesc;
-		texDesc.Width = CubeMapSize;
-		texDesc.Height = CubeMapSize;
-		texDesc.MipLevels = 0;
-		texDesc.ArraySize = 6;
+		texDesc.Width = CubeMapSize; // 256
+		texDesc.Height = CubeMapSize; // 256
+		texDesc.MipLevels = 0; // 0은 전체 서브 텍스처, 1은 멀티샘플링 텍스처?
+		texDesc.ArraySize = 6; // 배열 길이
 		texDesc.SampleDesc.Count = 1;
 		texDesc.SampleDesc.Quality = 0;
 		texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		texDesc.Usage = D3D11_USAGE_DEFAULT;
 		texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 		texDesc.CPUAccessFlags = 0;
-		texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
+		texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE; 
+		// D3D11_RESOURCE_MISC_GENERATE_MIPS GenerateMips 메서드가 작동하기 위한 플래그
 
 		ID3D11Texture2D* cubeTex = 0;
 		HR(md3dDevice->CreateTexture2D(&texDesc, 0, &cubeTex));
@@ -532,14 +531,14 @@ namespace dynamicCubeMap
 		// 
 
 		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
-		rtvDesc.Format = texDesc.Format;
-		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-		rtvDesc.Texture2DArray.ArraySize = 1;
-		rtvDesc.Texture2DArray.MipSlice = 0;
+		rtvDesc.Format = texDesc.Format; // 텍스처 포맷과 동일하게
+		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY; // 2차원 텍스처 배열 렌더타겟뷰
+		rtvDesc.Texture2DArray.ArraySize = 1; // 사용할 텍스처의 수
+		rtvDesc.Texture2DArray.MipSlice = 0; // 밉맵 수준
 
 		for (int i = 0; i < 6; ++i)
 		{
-			rtvDesc.Texture2DArray.FirstArraySlice = i;
+			rtvDesc.Texture2DArray.FirstArraySlice = i; // 텍스처 배열의 인덱스
 			HR(md3dDevice->CreateRenderTargetView(cubeTex, &rtvDesc, &mDynamicCubeMapRTV[i]));
 		}
 
@@ -550,8 +549,8 @@ namespace dynamicCubeMap
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 		srvDesc.Format = texDesc.Format;
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-		srvDesc.TextureCube.MostDetailedMip = 0;
-		srvDesc.TextureCube.MipLevels = -1;
+		srvDesc.TextureCube.MostDetailedMip = 0; // 가장 자세한 밉맵 수준
+		srvDesc.TextureCube.MipLevels = -1; // 최대 밉맵 수, -1은 모든 밉맵 레벨 표시
 
 		HR(md3dDevice->CreateShaderResourceView(cubeTex, &srvDesc, &mDynamicCubeMapSRV));
 
@@ -562,14 +561,15 @@ namespace dynamicCubeMap
 		// that has the same resolution as the cubemap faces.  
 		//
 
+		// 입방체맵 해상도로 깊이버퍼 생성
 		D3D11_TEXTURE2D_DESC depthTexDesc;
 		depthTexDesc.Width = CubeMapSize;
 		depthTexDesc.Height = CubeMapSize;
-		depthTexDesc.MipLevels = 1;
+		depthTexDesc.MipLevels = 1; 
 		depthTexDesc.ArraySize = 1;
-		depthTexDesc.SampleDesc.Count = 1;
+		depthTexDesc.SampleDesc.Count = 1; // 멀티 샘플링 안함
 		depthTexDesc.SampleDesc.Quality = 0;
-		depthTexDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		depthTexDesc.Format = DXGI_FORMAT_D32_FLOAT; // 스텐실을 안씀
 		depthTexDesc.Usage = D3D11_USAGE_DEFAULT;
 		depthTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 		depthTexDesc.CPUAccessFlags = 0;
@@ -578,20 +578,17 @@ namespace dynamicCubeMap
 		ID3D11Texture2D* depthTex = 0;
 		HR(md3dDevice->CreateTexture2D(&depthTexDesc, 0, &depthTex));
 
-		// Create the depth stencil view for the entire cube
+		// 어차피 null로 지정하면 동일한데 왜 이렇게 직접만든걸까
 		D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 		dsvDesc.Format = depthTexDesc.Format;
 		dsvDesc.Flags = 0;
 		dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		dsvDesc.Texture2D.MipSlice = 0;
-		HR(md3dDevice->CreateDepthStencilView(depthTex, &dsvDesc, &mDynamicCubeMapDSV));
+		HR(md3dDevice->CreateDepthStencilView(depthTex, &dsvDesc, &mDynamicCubeMapDSV)); 
 
 		ReleaseCOM(depthTex);
 
-		//
-		// Viewport for drawing into cubemap.
-		// 
-
+		// 입방체맵 해상도로 뷰포트 설정
 		mCubeMapViewport.TopLeftX = 0.0f;
 		mCubeMapViewport.TopLeftY = 0.0f;
 		mCubeMapViewport.Width = (float)CubeMapSize;

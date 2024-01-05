@@ -2,8 +2,7 @@
 
 namespace common
 {
-	using DirectX::SimpleMath::Matrix;
-	using DirectX::SimpleMath::Vector4;
+	using namespace DirectX::SimpleMath;
 
 	class MathHelper
 	{

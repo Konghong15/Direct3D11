@@ -147,9 +147,14 @@ namespace blending
 		mWaves.Update(deltaTime);
 
 		D3D11_MAPPED_SUBRESOURCE mappedData;
-		HR(md3dContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
-
+		HR(md3dContext->Map(
+			mWavesVB, // 동적 정점 버퍼
+			0, // 부분자원(subresource) 색인, 안 쓸 시 0
+			D3D11_MAP_WRITE_DISCARD, // 버퍼를 폐기하고 새 버퍼 할당하도록 해서 렌더링 일시정지 방지
+			0, // 추가적인 플래그, 지금은 0
+			&mappedData)); // 자원 접근을 위한 포인터
 		Vertex* v = reinterpret_cast<Vertex*>(mappedData.pData);
+		
 		for (UINT i = 0; i < mWaves.GetVertexCount(); ++i)
 		{
 			v[i].Pos = mWaves[i];
@@ -474,13 +479,12 @@ namespace blending
 		mWaves.Init(160, 160, 1.0f, 0.03f, 3.25f, 0.4f);
 
 		D3D11_BUFFER_DESC vbd;
-		vbd.Usage = D3D11_USAGE_DYNAMIC;
+		vbd.Usage = D3D11_USAGE_DYNAMIC; // 동적으로 사용
 		vbd.ByteWidth = sizeof(Vertex) * mWaves.GetVertexCount();
 		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE; // CPU 쓰기 접근
 		vbd.MiscFlags = 0;
 		HR(md3dDevice->CreateBuffer(&vbd, 0, &mWavesVB));
-
 
 		std::vector<UINT> indices(3 * mWaves.GetTriangleCount()); // 3 indices per face
 
