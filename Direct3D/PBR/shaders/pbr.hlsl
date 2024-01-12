@@ -140,18 +140,38 @@ float4 PS(PixelShaderInput pin) : SV_Target
 	float3 ambientLighting;
     if (useIBL.r > 0)		
 	{
-		float3 irradiance = irradianceTexture.Sample(defaultSampler, N).rgb; // 난반사 조도, 노말로 샘플링
-		uint specularTextureLevels = querySpecularTextureLevels();
-		float3 specularIrradiance = specularTexture.SampleLevel(defaultSampler, viewReflect, roughness * specularTextureLevels).rgb; // 정반사 조도, 뷰 반사벡터로 샘플링, 거칠기를 반영함?
-		float2 specularBRDF = specularBRDF_LUT.Sample(spBRDF_Sampler, float2(ndotv, roughness)).rg; // 정반사 BRDF 룩업테이블, 노말 뷰의 cos값과 거칠기로 샘플링
+		// 난반사 조도, 노말로 샘플링
+		float3 irradiance = irradianceTexture.Sample(defaultSampler, N).rgb; 
+		
+		// 주변 조명에 대한 프레넬 계수, 비스듬히 들어오는 정도
+		// 여러 방향에서 오는 간접광을 다뤄야 하므로 ndotv로 계산한다.
+		float3 F = fresnelSchlick(F0, ndotv);
 
-		float3 F = fresnelSchlick(F0, ndotv); // 주변 조명에 대한 프레넬
-		float3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+		// 표면 산란 비율을 구해준다.
+		float3 kd = lerp(1.0 - F, 0.0, metalness);
 
-		float3 kd = lerp(1.0 - F, 0.0, metalness); // 확산 기여 계수??
+		// 큐브맵의 Diffuse는 Lambertian BRDF라 PI로 나눠주지 않아도 된다.
 		float3 diffuseIBL = kd * albedo * irradiance;
 
-		ambientLighting = diffuseIBL + specularIBL;
+		// 전체 LOD 밉맵 레벨 수를 구해온다.
+		uint specularTextureLevels = querySpecularTextureLevels();
+		
+		// 정반사 조도, 뷰반사벡터로 샘플링한다.
+		// 전체 LOD 밉맵 레벨 * 거칠기를 거칠기에 따라 밉맵수준을 선택한다.
+		float3 specularIrradiance = specularTexture.SampleLevel(defaultSampler, 
+											viewReflect,
+											roughness * specularTextureLevels).rgb;
+		
+		// 정반사 BRDF 룩업테이블, 노말 뷰의 cos값과 거칠기로 샘플링
+		// ndotv가 커질수록 r값이 커짐
+		// roughness가 작을수록 g값이 커짐
+		float2 specularBRDF = specularBRDF_LUT.Sample(spBRDF_Sampler,
+											float2(ndotv, roughness)).rg; 
+		
+		// 카메라 시선과 밀접하고 거칠기가 작을수록 specularIBL항이 커진다.
+		float3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+
+		ambientLighting = (diffuseIBL + specularIBL); // * ambientAccess;
 	}
 
 	return float4(directLighting + ambientLighting, 1.0);

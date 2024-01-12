@@ -226,7 +226,6 @@ namespace ssao
 		md3dContext->VSSetShader(VS->second, 0, 0);
 		md3dContext->PSSetShader(PS->second, 0, 0);
 
-
 		// ssao ¸Ê ¹ÙÀÎµù
 		auto ssaoSRV = mSsao->AmbientSRV();
 		md3dContext->PSSetShaderResources(1, 1, &ssaoSRV);

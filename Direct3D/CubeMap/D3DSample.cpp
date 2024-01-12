@@ -117,7 +117,7 @@ namespace cubeMap
 
 		RenderStates::Init(md3dDevice);
 
-		mSky = new Sky(md3dDevice, L"../Resource/Textures/grasscube1024.dds", 5000.0f);
+		mSky = new Sky(md3dDevice, L"../Resource/Textures/grasscube1024.dds", 100.f);
 
 		HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"../Resource/Textures/floor.dds", NULL, &mFloorTexSRV));
 		HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"../Resource/Textures/stone.dds", NULL, &mStoneTexSRV));
@@ -177,103 +177,103 @@ namespace cubeMap
 		md3dContext->IASetInputLayout(mBasic32);
 		md3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		UINT stride = sizeof(Basic32);
-		UINT offset = 0;
-
-		mCam.UpdateViewMatrix();
-
-		Matrix view = mCam.GetView();
-		Matrix proj = mCam.GetProj();
-		Matrix viewProj = mCam.GetViewProj();
-
-		float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-		// 프레임 상수버퍼 업데이트
-		memcpy(mCBPerFrame.DirLights, mDirLights, sizeof(mCBPerFrame.DirLights));
-		mCBPerFrame.EyePosW = mCam.GetPosition();
-		mCBPerFrame.FogColor = Silver;
-		mCBPerFrame.FogStart = 500.f;
-		mCBPerFrame.FogRange = 500.f;
-		mCBPerFrame.LigthCount = mLightCount;
-		md3dContext->UpdateSubresource(mPerFrameCB, 0, 0, &mCBPerFrame, 0, 0);
-
-		Matrix world;
-		Matrix worldInvTranspose;
-		Matrix worldViewProj;
-
-		md3dContext->IASetVertexBuffers(0, 1, &mShapesVB, &stride, &offset);
-		md3dContext->IASetIndexBuffer(mShapesIB, DXGI_FORMAT_R32_UINT, 0);
-
-		// 오브젝트 상수버퍼 업데이트 임시 함수(람다)
-		auto updatePerObject = [&](const Matrix& world, const Matrix& worldInvTranspose, const Matrix& WVP, const Matrix& Tex, const Material& matrial)
-		{
-			mCBPerObject.World = world.Transpose();
-			mCBPerObject.WorldInvTranspose = worldInvTranspose.Transpose();
-			mCBPerObject.WorldViewProj = WVP.Transpose();
-			mCBPerObject.Tex = Tex.Transpose();
-			mCBPerObject.Material = matrial;
-			md3dContext->UpdateSubresource(mPerObjectCB, 0, 0, &mCBPerObject, 0, 0);
-		};
-
-		// basic32 쉐이더 바인딩
-		md3dContext->VSSetShader(mVertexShader, 0, 0);
-		md3dContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
-		md3dContext->VSSetConstantBuffers(1, 1, &mPerFrameCB);
-
-		md3dContext->PSSetShader(mPixelShader, 0, 0);
-		md3dContext->PSSetConstantBuffers(0, 1, &mPerObjectCB);
-		md3dContext->PSSetConstantBuffers(1, 1, &mPerFrameCB);
-
-		// 땅 그리기
-		world = mGridWorld;
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world * view * proj;
-		updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::CreateScale(6.0f, 8.0f, 1.0f), mGridMat);
-		md3dContext->PSSetShaderResources(0, 1, &mFloorTexSRV);
-		md3dContext->DrawIndexed(mGridIndexCount, mGridIndexOffset, mGridVertexOffset);
-
-		// 박스 그리기
-		world = mBoxWorld;
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world * view * proj;
-		updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::Identity, mBoxMat);
-		md3dContext->PSSetShaderResources(0, 1, &mStoneTexSRV);
-		md3dContext->DrawIndexed(mBoxIndexCount, mBoxIndexOffset, mBoxVertexOffset);
-
-		// 원기둥 그리기
-		for (int i = 0; i < 10; ++i)
-		{
-			world = mCylWorld[i];
+			UINT stride = sizeof(Basic32);
+			UINT offset = 0;
+		
+			mCam.UpdateViewMatrix();
+		
+			Matrix view = mCam.GetView();
+			Matrix proj = mCam.GetProj();
+			Matrix viewProj = mCam.GetViewProj();
+		
+			float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		
+			// 프레임 상수버퍼 업데이트
+			memcpy(mCBPerFrame.DirLights, mDirLights, sizeof(mCBPerFrame.DirLights));
+			mCBPerFrame.EyePosW = mCam.GetPosition();
+			mCBPerFrame.FogColor = Silver;
+			mCBPerFrame.FogStart = 500.f;
+			mCBPerFrame.FogRange = 500.f;
+			mCBPerFrame.LigthCount = mLightCount;
+			md3dContext->UpdateSubresource(mPerFrameCB, 0, 0, &mCBPerFrame, 0, 0);
+		
+			Matrix world;
+			Matrix worldInvTranspose;
+			Matrix worldViewProj;
+		
+			md3dContext->IASetVertexBuffers(0, 1, &mShapesVB, &stride, &offset);
+			md3dContext->IASetIndexBuffer(mShapesIB, DXGI_FORMAT_R32_UINT, 0);
+		
+			// 오브젝트 상수버퍼 업데이트 임시 함수(람다)
+			auto updatePerObject = [&](const Matrix& world, const Matrix& worldInvTranspose, const Matrix& WVP, const Matrix& Tex, const Material& matrial)
+				{
+					mCBPerObject.World = world.Transpose();
+					mCBPerObject.WorldInvTranspose = worldInvTranspose.Transpose();
+					mCBPerObject.WorldViewProj = WVP.Transpose();
+					mCBPerObject.Tex = Tex.Transpose();
+					mCBPerObject.Material = matrial;
+					md3dContext->UpdateSubresource(mPerObjectCB, 0, 0, &mCBPerObject, 0, 0);
+				};
+		
+			// basic32 쉐이더 바인딩
+			md3dContext->VSSetShader(mVertexShader, 0, 0);
+			md3dContext->VSSetConstantBuffers(0, 1, &mPerObjectCB);
+			md3dContext->VSSetConstantBuffers(1, 1, &mPerFrameCB);
+		
+			md3dContext->PSSetShader(mPixelShader, 0, 0);
+			md3dContext->PSSetConstantBuffers(0, 1, &mPerObjectCB);
+			md3dContext->PSSetConstantBuffers(1, 1, &mPerFrameCB);
+		
+			// 땅 그리기
+			world = mGridWorld;
 			worldInvTranspose = MathHelper::InverseTranspose(world);
 			worldViewProj = world * view * proj;
-
-			updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::Identity, mCylinderMat);
-			md3dContext->PSSetShaderResources(0, 1, &mBrickTexSRV);
-			md3dContext->DrawIndexed(mCylinderIndexCount, mCylinderIndexOffset, mCylinderVertexOffset);
-		}
-
-		// 큐브맵에 반사된 구 그리기
-		for (int i = 0; i < 10; ++i)
-		{
-			world = mSphereWorld[i];
+			updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::CreateScale(6.0f, 8.0f, 1.0f), mGridMat);
+			md3dContext->PSSetShaderResources(0, 1, &mFloorTexSRV);
+			md3dContext->DrawIndexed(mGridIndexCount, mGridIndexOffset, mGridVertexOffset);
+		
+			// 박스 그리기
+			world = mBoxWorld;
 			worldInvTranspose = MathHelper::InverseTranspose(world);
 			worldViewProj = world * view * proj;
-			updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::Identity, mSphereMat);
+			updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::Identity, mBoxMat);
 			md3dContext->PSSetShaderResources(0, 1, &mStoneTexSRV);
-			md3dContext->DrawIndexed(mSphereIndexCount, mSphereIndexOffset, mSphereVertexOffset);
-		}
+			md3dContext->DrawIndexed(mBoxIndexCount, mBoxIndexOffset, mBoxVertexOffset);
+		
+			// 원기둥 그리기
+			for (int i = 0; i < 10; ++i)
+			{
+				world = mCylWorld[i];
+				worldInvTranspose = MathHelper::InverseTranspose(world);
+				worldViewProj = world * view * proj;
+		
+				updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::Identity, mCylinderMat);
+				md3dContext->PSSetShaderResources(0, 1, &mBrickTexSRV);
+				md3dContext->DrawIndexed(mCylinderIndexCount, mCylinderIndexOffset, mCylinderVertexOffset);
+			}
+		
+			// 큐브맵에 반사된 구 그리기
+			for (int i = 0; i < 10; ++i)
+			{
+				world = mSphereWorld[i];
+				worldInvTranspose = MathHelper::InverseTranspose(world);
+				worldViewProj = world * view * proj;
+				updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::Identity, mSphereMat);
+				md3dContext->PSSetShaderResources(0, 1, &mStoneTexSRV);
+				md3dContext->DrawIndexed(mSphereIndexCount, mSphereIndexOffset, mSphereVertexOffset);
+			}
+		
+			// 해골 그리기
+			md3dContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
+			md3dContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
+		
+			world = mSkullWorld;
+			worldInvTranspose = MathHelper::InverseTranspose(world);
+			worldViewProj = world * view * proj;
+			updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::Identity, mSkullMat);
+			md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
 
-		// 해골 그리기
-		md3dContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
-		md3dContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
-
-		world = mSkullWorld;
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world * view * proj;
-		updatePerObject(world, worldInvTranspose, worldViewProj, Matrix::Identity, mSkullMat);
-		md3dContext->DrawIndexed(mSkullIndexCount, 0, 0);
-
-		// 바인딩
+			// 바인딩
 		md3dContext->VSSetShader(mVertexShaderPos, 0, 0);
 		md3dContext->VSSetConstantBuffers(0, 1, &mPerFrameCBPos);
 
@@ -282,8 +282,13 @@ namespace cubeMap
 
 		// 버퍼 갱신
 		Vector3 eyePos = mCam.GetPosition();
-		Matrix T = Matrix::CreateTranslation(eyePos);
-		Matrix WVP = T * mCam.GetViewProj();
+		Matrix W = Matrix::CreateTranslation(eyePos);
+		Matrix V = mCam.GetView();
+		Matrix P = mCam.GetProj();
+		Matrix WVP = W;
+		WVP *= V;
+		WVP *= P;
+
 		mCBPerFramePos.WorldViewProj = WVP.Transpose();
 		md3dContext->UpdateSubresource(mPerFrameCBPos, 0, 0, &mCBPerFramePos, 0, 0);
 		auto* SRV = mSky->GetCubeMapSRV();

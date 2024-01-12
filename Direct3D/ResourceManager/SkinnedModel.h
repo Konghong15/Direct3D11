@@ -5,6 +5,7 @@
 #include <string>
 
 #include <d3d11.h>
+#include <directxtk/SimpleMath.h>
 
 #include "Animation.h"
 #include "Subset.h"

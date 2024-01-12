@@ -65,6 +65,7 @@ float4 PS(VertexOut pin) : SV_Target
 	toEye /= distToEye;
 	
     float4 texColor = float4(1, 1, 1, 1);
+
     if(gUseTexure)
 	{
 		texColor = gDiffuseMap.Sample( samLinear, pin.Tex );
@@ -78,6 +79,7 @@ float4 PS(VertexOut pin) : SV_Target
 		float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 		float4 spec    = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
+		// 텍스처 공간 좌표로 샘플링한다.
 		pin.SsaoPosH /= pin.SsaoPosH.w;
 		float ambientAccess = gSsaoMap.SampleLevel(samLinear, pin.SsaoPosH.xy, 0.0f).r;
 
@@ -87,8 +89,8 @@ float4 PS(VertexOut pin) : SV_Target
 			float4 A, D, S;
 			ComputeDirectionLight(gMaterial, gDirLights[i], pin.NormalW, toEye, A, D, S);
 
-			ambient += ambientAccess*A;    
-			diffuse += ambientAccess*D;
+			ambient += ambientAccess * A;    
+			diffuse += ambientAccess * D; // 대비를 더 강하게 하기 위해 diffuse 항에 적용하기도 한다.
 			spec    += S;
 		}
 

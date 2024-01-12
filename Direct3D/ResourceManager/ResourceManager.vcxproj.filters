@@ -22,6 +22,9 @@
     <Filter Include="shader">
       <UniqueIdentifier>{6a62b550-cd2f-4cc2-8f5e-15ab574581c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{f19d4a01-a362-4778-9b24-3e7d32bf7e94}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

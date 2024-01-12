@@ -37,19 +37,22 @@ VertexOut VS(VertexIn vin)
     return vout;
 }
 
+int gSampleCount = 14;
+float    gSurfaceEpsilon     = 0.05f;
+float    gOcclusionRadius    = 0.5f;
+float    gOcclusionFadeStart = 1.0f;
+float    gOcclusionFadeEnd   = 2.0f;
+
 float OcclusionFunction(float distZ)
 {
-	int gSampleCount = 14;
-	float    gSurfaceEpsilon     = 0.05f;
-	float    gOcclusionRadius    = 0.5f;
-	float    gOcclusionFadeStart = 1.0f;
-	float    gOcclusionFadeEnd   = 2.0f;
-
 	float occlusion = 0.0f;
+
+	// 차폐도가 판정되려면 최소한 앱실론보다 앞에 존재해야 한다.
 	if(distZ > gSurfaceEpsilon)
 	{
-		float fadeLength = gOcclusionFadeEnd - gOcclusionFadeStart; // 끝과 시작 거
-		occlusion = saturate( (gOcclusionFadeEnd-distZ)/fadeLength ); //일정 범위내로 정규화
+		// 거리가 멀수록 차폐도가 작도록 하고, 정규화해준다.
+		float fadeLength = gOcclusionFadeEnd - gOcclusionFadeStart; 
+		occlusion = saturate( (gOcclusionFadeEnd-distZ) / fadeLength ); 
 	}
 	
 	return occlusion;	
@@ -57,22 +60,17 @@ float OcclusionFunction(float distZ)
 
 float4 PS(VertexOut pin) : SV_Target
 {
-	int gSampleCount = 14;
-	float    gOcclusionRadius    = 0.5f;
-	float    gOcclusionFadeStart = 0.2f;
-	float    gOcclusionFadeEnd   = 2.0f;
-	float    gSurfaceEpsilon     = 0.05f;
-
 	// 화면에 보이는 픽셀의 노말과 깊이값을 읽는다.
 	float4 normalDepth = gNormalDepthMap.SampleLevel(samNormalDepth, pin.Tex, 0.0f);
 	float3 n = normalDepth.xyz;
 	float pz = normalDepth.w;
 	
 	// 보간된 먼 평면 거리로 현재 위치를 읽어온다.
-	float3 p = (pz / pin.ToFarPlane.z) * pin.ToFarPlane;
+	float depthRatio = pz / pin.ToFarPlane.z;
+	float3 p = depthRatio * pin.ToFarPlane;
 	
 	// 랜덤한 벡터를 읽어와서 -1, 1로 매핑한다.
-	float3 randVec = 2.0f*gRandomVecMap.SampleLevel(samRandomVec, 4.0f *pin.Tex, 0.0f).rgb - 1.0f;
+	float3 randVec = 2.0f * gRandomVecMap.SampleLevel(samRandomVec, 4.0f * pin.Tex, 0.0f).rgb - 1.0f;
 
 	float occlusionSum = 0.0f;
 
@@ -86,18 +84,18 @@ float4 PS(VertexOut pin) : SV_Target
 		float flip = sign( dot(offset, n) );
 		float3 q = p + flip * gOcclusionRadius * offset;
 		
-		// 텍스처 좌표를 얻는다.
+		// 임의로 만든 표본을 텍스처 공간으로 변환한다.
 		float4 projQ = mul(float4(q, 1.0f), gViewToTexSpace);
 		projQ /= projQ.w;
 
-		// 시야 공간의 차폐점 r
+		// 깊이맵을 샘플링하여 실제 잠재적인 차폐점을 구한다.
 		float rz = gNormalDepthMap.SampleLevel(samNormalDepth, projQ.xy, 0.0f).a;
-		float3 r = (rz / q.z) * q; // 시야 공간에 존재하는 q.z로 샘플링한 z의 비율을 구하고 그 값을 q에 곱해 실제 차폐점을 가져온다.
-		
+		float3 r = (rz / q.z) * q; 
+
 		// 깊이 차이를 계산한다.
 		float distZ = p.z - r.z;
 
-		// 같은 평면에 있는지 검사한다.
+		// 같은 평면에 있는지 검사한다. 두 벡터가 같은 평면에 있으면 차폐점이 아님!
 		float dp = max(dot(n, normalize(r - p)), 0.0f);
 		
 		// 차폐도를 누적시킨다.
@@ -107,8 +105,9 @@ float4 PS(VertexOut pin) : SV_Target
 	
 	occlusionSum /= gSampleCount;
 	
+	// 도달도를 구해준다.
 	float access = 1.0f - occlusionSum;
 
 	// 거듭 제곱 수를 올리면 더 가파른 모양을 보여 대비가 강해진다.
-	return saturate(pow(access,100));
+	return saturate(pow(access,4));
 }
