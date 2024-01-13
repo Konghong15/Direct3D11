@@ -96,6 +96,7 @@ namespace particleSystem
 		));
 		ReleaseCOM(blob);
 
+		// 스트림 출력용 기하 셰이더
 		D3D11_SO_DECLARATION_ENTRY desc[] =
 		{
 			{ 0, "POSITION", 0, 0, 3, 0},
@@ -107,16 +108,17 @@ namespace particleSystem
 		UINT bufferStrides[] = { sizeof(Vertex) };
 		HR(D3DHelper::CompileShaderFromFile(filename.c_str(), "StreamOutGS", "gs_5_0", &blob));
 		HR(device->CreateGeometryShaderWithStreamOutput(
-			blob->GetBufferPointer(),
-			blob->GetBufferSize(),
-			desc,
-			ARRAYSIZE(desc),
-			bufferStrides,
+			blob->GetBufferPointer(), // 컴파일된 진입점
+			blob->GetBufferSize(), // 컴파일된 사이즈
+			desc, // 정점 형식
+			ARRAYSIZE(desc), // 정점 형식 개수
+			bufferStrides, // 정점 사이즈
 			ARRAYSIZE(bufferStrides),
-			0,
+			0, // 래스터라이저 단계로 보낼 스트림 인덱스 번호
 			NULL,
-			&mStreamOutGS));
+			&mStreamOutGS)); // out 매개변수
 		ReleaseCOM(blob);
+
 		HR(D3DHelper::CompileShaderFromFile(filename.c_str(), "DrawGS", "gs_5_0", &blob));
 		HR(device->CreateGeometryShader(
 			blob->GetBufferPointer(),
@@ -157,6 +159,7 @@ namespace particleSystem
 
 		device->CreateSamplerState(&samplerDesc, &mSamLinear);
 
+		// 스트림 출력용 정점 버퍼 만들기
 		D3D11_BUFFER_DESC vbd;
 		vbd.Usage = D3D11_USAGE_DEFAULT;
 		vbd.ByteWidth = sizeof(Vertex) * 1;
@@ -166,10 +169,10 @@ namespace particleSystem
 		vbd.StructureByteStride = 0;
 		D3D11_SUBRESOURCE_DATA vinitData;
 		vinitData.pSysMem = &p;
-		HR(device->CreateBuffer(&vbd, &vinitData, &mInitVB));
+		HR(device->CreateBuffer(&vbd, &vinitData, &mInitVB)); // 초기화용 방출기 입자
 
-		vbd.ByteWidth = sizeof(Vertex) * mMaxParticles;
-		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_STREAM_OUTPUT;
+		vbd.ByteWidth = sizeof(Vertex) * mMaxParticles; // 최대로 다룰 버퍼 크기, 넘어가면 안댐
+		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_STREAM_OUTPUT; // 플래그 중요!
 		HR(device->CreateBuffer(&vbd, 0, &mDrawVB));
 		HR(device->CreateBuffer(&vbd, 0, &mStreamOutVB));
 	}
@@ -207,9 +210,9 @@ namespace particleSystem
 		// 바인딩
 		dc->IASetInputLayout(mInputLayout);
 		dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-		if (mFirstRun)
+		if (mFirstRun) // 처음 그릴 땐 초기화 버퍼로 그린다.
 			dc->IASetVertexBuffers(0, 1, &mInitVB, &stride, &offset);
-		else
+		else // 아니면 그냥 그리기용 버퍼 사용
 			dc->IASetVertexBuffers(0, 1, &mDrawVB, &stride, &offset);
 
 		dc->VSSetSamplers(0, 1, &mSamLinear);
@@ -230,9 +233,11 @@ namespace particleSystem
 		// 스트림 아웃으로 정점 생성/삭제
 		dc->VSSetShader(mStreamOutVS, 0, 0);
 		dc->GSSetShader(mStreamOutGS, 0, 0);
-		dc->PSSetShader(NULL, 0, 0);
-		dc->OMSetDepthStencilState(RenderStates::DisableDepthDSS, 0);
-		dc->SOSetTargets(1, &mStreamOutVB, &offset);
+		dc->PSSetShader(NULL, 0, 0); // 픽셀 셰이더 바인딩 안하기
+		dc->OMSetDepthStencilState(RenderStates::DisableDepthDSS, 0); // 깊이 쓰기 끄기
+		dc->SOSetTargets(1, // 묶을 정점 개수, 최대 4개
+			&mStreamOutVB, // 출력용 버퍼
+			&offset); // 정점 버퍼마다 기록하기 시작할 위치를 나타냄, 현재 0
 
 		if (mFirstRun)
 		{
@@ -241,13 +246,13 @@ namespace particleSystem
 		}
 		else
 		{
-			dc->DrawAuto();
+			dc->DrawAuto(); // 정점 개수만큼 알아서 draw 해준다.
 		}
-		ID3D11Buffer* bufferArray[1] = { 0 };
+		ID3D11Buffer* bufferArray[1] = { NULL};
 		dc->OMSetDepthStencilState(0, 0);
 
-		dc->SOSetTargets(1, bufferArray, &offset);
-		std::swap(mDrawVB, mStreamOutVB);
+		dc->SOSetTargets(1, bufferArray, &offset); // 출력 단계를 비워준다.
+		std::swap(mDrawVB, mStreamOutVB); // 핑퐁을 위해 swap 한다.
 
 		// 화면 렌더링
 		dc->VSSetShader(mDrawVS, 0, 0);
@@ -255,8 +260,8 @@ namespace particleSystem
 		dc->PSSetShader(mDrawPS, 0, 0);
 
 		float factor[] = { 0.f, 0.f, 0.f, 0.f };
-		dc->OMSetBlendState(RenderStates::AdditiveBlending, factor, 0xffffffff);
-		dc->OMSetDepthStencilState(RenderStates::NoDepthWrites, 0);
+		dc->OMSetBlendState(RenderStates::AdditiveBlending, factor, 0xffffffff); // 가산 혼합
+		dc->OMSetDepthStencilState(RenderStates::NoDepthWrites, 0); // 깊이 쓰기는 하지 않음
 		dc->IASetVertexBuffers(0, 1, &mDrawVB, &stride, &offset);
 		dc->DrawAuto();
 		dc->OMSetBlendState(0, factor, 0xffffffff);

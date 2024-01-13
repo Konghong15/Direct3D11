@@ -245,9 +245,12 @@ namespace common
 	{
 		using namespace DirectX::SimpleMath;
 
-		std::vector<Vector4> randomValues(1024);
+		// 랜덤 백터 생성
+		const size_t ELEMENT_COUNT = 1024u;
 
-		for (int i = 0; i < 1024; ++i)
+		std::vector<Vector4> randomValues(ELEMENT_COUNT);
+
+		for (size_t i = 0; i < ELEMENT_COUNT; ++i)
 		{
 			randomValues[i].x = MathHelper::RandF(-1.0f, 1.0f);
 			randomValues[i].y = MathHelper::RandF(-1.0f, 1.0f);
@@ -255,16 +258,9 @@ namespace common
 			randomValues[i].w = MathHelper::RandF(-1.0f, 1.0f);
 		}
 
-		D3D11_SUBRESOURCE_DATA initData;
-		initData.pSysMem = &randomValues[0];
-		initData.SysMemPitch = 1024 * sizeof(Vector4);
-		initData.SysMemSlicePitch = 0;
-
-		//
-		// Create the texture.
-		//
+		// 텍스처 생성
 		D3D11_TEXTURE1D_DESC texDesc;
-		texDesc.Width = 1024;
+		texDesc.Width = ELEMENT_COUNT;
 		texDesc.MipLevels = 1;
 		texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		texDesc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -272,16 +268,19 @@ namespace common
 		texDesc.CPUAccessFlags = 0;
 		texDesc.MiscFlags = 0;
 		texDesc.ArraySize = 1;
+		
+		D3D11_SUBRESOURCE_DATA initData;
+		initData.pSysMem = &randomValues[0];
+		initData.SysMemPitch = ELEMENT_COUNT * sizeof(Vector4);
+		initData.SysMemSlicePitch = 0;
 
 		ID3D11Texture1D* randomTex = 0;
 		HR(device->CreateTexture1D(&texDesc, &initData, &randomTex));
 
-		//
-		// Create the resource view.
-		//
+		// 쉐이더 리소스 뷰 생성
 		D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
 		viewDesc.Format = texDesc.Format;
-		viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+		viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D; // 1D 텍스처
 		viewDesc.Texture1D.MipLevels = texDesc.MipLevels;
 		viewDesc.Texture1D.MostDetailedMip = 0;
 

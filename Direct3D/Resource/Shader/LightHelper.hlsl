@@ -191,15 +191,14 @@ float CalcShadowFactor(SamplerComparisonState samShadow,
 	Texture2D shadowMap,
 	float4 shadowPosH)
 {
-	// Complete projection by doing division by w.
+	// 광원 기준으로 한 텍스처 공간 좌표
 	shadowPosH.xyz /= shadowPosH.w;
 
-	// Depth in NDC space.
+	// 깊이는 텍스처 공간과 NDC가 동일하다.
 	float depth = shadowPosH.z;
 
-	// Texel size.
+	// 텍셀 사이즈로 커널 구축
 	const float dx = SMAP_DX;
-
 	float percentLit = 0.0f;
 	const float2 offsets[9] =
 	{
@@ -211,8 +210,10 @@ float CalcShadowFactor(SamplerComparisonState samShadow,
 	[unroll]
 	for (int i = 0; i < 9; ++i)
 	{
-		percentLit += shadowMap.SampleCmpLevelZero(samShadow,
-			shadowPosH.xy + offsets[i], depth).r;
+		// 해당함수는 PCF를 기반하여 0 ~ 1 사이의 결과값을 반환한다.
+		percentLit += shadowMap.SampleCmpLevelZero(samShadow, // 샘플러
+			shadowPosH.xy + offsets[i], // 텍스처 좌표
+			depth).r; // 비교값
 	}
 
 	return percentLit /= 9.0f;

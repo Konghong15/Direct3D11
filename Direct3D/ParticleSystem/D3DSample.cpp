@@ -133,9 +133,9 @@ namespace particleSystem
 		assert(md3dContext);
 		assert(mSwapChain);
 
-		float color[] = { 0.f, 0.f, 0.f, 1.0f };
+		float color[] = { 1.f, 0.f, 0.f, 1.0f };
 
-		md3dContext->ClearRenderTargetView(mRenderTargetView, color);
+		md3dContext->ClearRenderTargetView(mRenderTargetView, Black);
 		md3dContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 		mBasic32->Bind(md3dContext);

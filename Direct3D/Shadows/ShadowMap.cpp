@@ -15,15 +15,12 @@ namespace shadows
 		mViewport.MinDepth = 0.0f;
 		mViewport.MaxDepth = 1.0f;
 
-		// Use typeless format because the DSV is going to interpret
-		// the bits as DXGI_FORMAT_D24_UNORM_S8_UINT, whereas the SRV is going to interpret
-		// the bits as DXGI_FORMAT_R24_UNORM_X8_TYPELESS.
 		D3D11_TEXTURE2D_DESC texDesc;
 		texDesc.Width = mWidth;
 		texDesc.Height = mHeight;
 		texDesc.MipLevels = 1;
 		texDesc.ArraySize = 1;
-		texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+		texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; // 무형식 텍스처
 		texDesc.SampleDesc.Count = 1;
 		texDesc.SampleDesc.Quality = 0;
 		texDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -48,7 +45,6 @@ namespace shadows
 		srvDesc.Texture2D.MostDetailedMip = 0;
 		HR(device->CreateShaderResourceView(depthMap, &srvDesc, &mDepthMapSRV));
 
-		// View saves a reference to the texture so we can release our reference.
 		ReleaseCOM(depthMap);
 	}
 

@@ -12,6 +12,7 @@ Texture2DArray gTexArray : register(t0);
 Texture1D gRandomTex : register(t1);
 SamplerState samLinear : register(s0);
 
+// 게임 시간과 직접 전달한 offset을 기반으로 랜덤 벡터를 샘플링해준다.
 float3 RandUnitVec3(float offset)
 {
 	float u = (gGameTime + offset);
@@ -71,10 +72,6 @@ void StreamOutGS(point Particle gin[1],
 			ptStream.Append(gin[0]);
 	}
 }
-
-GeometryShader gsStreamOut = ConstructGSWithSO(
-	CompileShader(gs_5_0, StreamOutGS()),
-	"POSITION.xyz; VELOCITY.xyz; SIZE.xy; AGE.x; TYPE.x");
 
 struct VertexOut
 {

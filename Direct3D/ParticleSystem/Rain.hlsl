@@ -82,9 +82,10 @@ void StreamOutGS(point Particle gin[1],
 	}
 }
 
+// 기하 셰이더를 출력 스트림에 쓰려면 쉐이더에 정점 구조를 정의해야 한다.
 GeometryShader gsStreamOut = ConstructGSWithSO(
-	CompileShader(gs_5_0, StreamOutGS()),
-	"POSITION.xyz; VELOCITY.xyz; SIZE.xy; AGE.x; TYPE.x");
+	CompileShader(gs_5_0, StreamOutGS()), // 컴파일된 기하셰이더 프로그램
+	"POSITION.xyz; VELOCITY.xyz; SIZE.xy; AGE.x; TYPE.x"); // 정점 형식
 
 struct VertexOut
 {

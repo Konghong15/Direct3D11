@@ -62,9 +62,11 @@ namespace common
 		ZeroMemory(&depthDesc, sizeof(D3D11_RASTERIZER_DESC));
 		depthDesc.FillMode = D3D11_FILL_SOLID;
 		depthDesc.CullMode = D3D11_CULL_BACK;
-		depthDesc.DepthBias = 100000;
-		depthDesc.DepthBiasClamp = 0.0f;
-		depthDesc.SlopeScaledDepthBias = 1.f;
+		// bias = (float)DepthBias * r + SlopeScaledDepthBias * maxDepthSlope
+		// r = 1 / 2^24 // 24비트 깊이 버퍼의 경우
+		depthDesc.DepthBias = 100000; // 적용할 고정된 편향치
+		depthDesc.DepthBiasClamp = 0.0f; // 허용되는 최대 깊이 편향치
+		depthDesc.SlopeScaledDepthBias = 1.f; // 기울기 편향치 비례 계수
 		HR(device->CreateRasterizerState(&depthDesc, &DepthRS));
 
 		// AlphaToCoverageBS

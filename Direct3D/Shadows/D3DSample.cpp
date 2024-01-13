@@ -663,7 +663,7 @@ namespace shadows
 
 	void D3DSample::buildShadowTransform()
 	{
-		// Only the first "main" light casts a shadow.
+		// 경계 구의 가운데를 가리키도록 한 후 뷰 행렬을 정의한다.
 		XMVECTOR lightDir = XMLoadFloat3(&mDirLights[0].Direction);
 		XMVECTOR lightPos = -2.0f * mSceneBounds.Radius * lightDir;
 		XMVECTOR targetPos = XMLoadFloat3(&mSceneBounds.Center);
@@ -671,11 +671,10 @@ namespace shadows
 
 		XMMATRIX V = XMMatrixLookAtLH(lightPos, targetPos, up);
 
-		// Transform bounding sphere to light space.
 		XMFLOAT3 sphereCenterLS;
 		XMStoreFloat3(&sphereCenterLS, XMVector3TransformCoord(targetPos, V));
 
-		// Ortho frustum in light space encloses scene.
+		// 시야 입체를 통해 투영 행렬 구성
 		float l = sphereCenterLS.x - mSceneBounds.Radius;
 		float b = sphereCenterLS.y - mSceneBounds.Radius;
 		float n = sphereCenterLS.z - mSceneBounds.Radius;
@@ -684,7 +683,7 @@ namespace shadows
 		float f = sphereCenterLS.z + mSceneBounds.Radius;
 		XMMATRIX P = XMMatrixOrthographicOffCenterLH(l, r, b, t, n, f);
 
-		// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
+		// NDC -> 텍스처 변환 행렬
 		XMMATRIX T(
 			0.5f, 0.0f, 0.0f, 0.0f,
 			0.0f, -0.5f, 0.0f, 0.0f,
