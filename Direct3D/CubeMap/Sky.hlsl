@@ -1,7 +1,7 @@
 
 cbuffer cbPerFrame : register(b0)
 {
-	float4x4 gWorldViewProj;
+	float4x4 gWorldViewProj; // 카메라의 회전이랑 투영변환만 반영해준다.
 };
 
 TextureCube gCubeMap : register(t0); 

@@ -26,19 +26,23 @@ VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
 	
-	// Already in NDC space.
+	// 차폐맵을 화면을 모두 감싸는 사각형으로 다시 그린다.
 	vout.PosH = float4(vin.PosL, 1.0f);
-
-	// Pass onto pixel shader.
 	vout.Tex = vin.Tex;
 	
     return vout;
 }
 
-
 float4 PS(VertexOut pin) : SV_Target
 {
+	float gWeights[11] = 
+	{	
+		0.05f, 0.05f, 0.1f, 0.1f, 0.1f, 0.2f, 0.1f, 0.1f, 0.1f, 0.05f, 0.05f
+	};
+	const int gBlurRadius = 5;
+
 	float2 texOffset;
+
 	if (gHorizontalBlur)
 	{
 		texOffset = float2(gTexelWidth, 0.0f);
@@ -48,47 +52,35 @@ float4 PS(VertexOut pin) : SV_Target
 		texOffset = float2(0.0f, gTexelWidth);
 	}
 
-	float gWeights[11] = 
-	{
-		0.05f, 0.05f, 0.1f, 0.1f, 0.1f, 0.2f, 0.1f, 0.1f, 0.1f, 0.05f, 0.05f
-	};
-	const int gBlurRadius = 5;
-
-	// The center value always contributes to the sum.
-	float4 color      = gWeights[5]*gInputImage.SampleLevel(samPoint, pin.Tex, 0.0);
+	// 중앙 값은 항상 총합에 기여하도록 미리 처리한다.
+	float4 color      = gWeights[5] * gInputImage.SampleLevel(samPoint, pin.Tex, 0.0);
 	float totalWeight = gWeights[5];
 	 
+	// 법선/깊이 데이터 샘플링
 	float4 centerNormalDepth = gNormalDepthMap.SampleLevel(samPoint, pin.Tex, 0.0f);
 
-	for(float i = -gBlurRadius; i <=gBlurRadius; ++i)
+	for(float i = -gBlurRadius; i <= gBlurRadius; ++i)
 	{
-		// We already added in the center weight.
+		// 중앙값은 다시 처리하지 않는다.
 		if( i == 0 )
 			continue;
 
-		float2 tex = pin.Tex + i*texOffset;
+		float2 tex = pin.Tex + i * texOffset;
+		float4 neighborNormalDepth = gNormalDepthMap.SampleLevel(samPoint, tex, 0.0f);
 
-		float4 neighborNormalDepth = gNormalDepthMap.SampleLevel(
-			samPoint, tex, 0.0f);
-
-		//
-		// If the center value and neighbor values differ too much (either in 
-		// normal or depth), then we assume we are sampling across a discontinuity.
-		// We discard such samples from the blur.
-		//
-	
-		if( dot(neighborNormalDepth.xyz, centerNormalDepth.xyz) >= 0.8f &&
-		    abs(neighborNormalDepth.a - centerNormalDepth.a) <= 0.2f )
+		// 중앙과 이웃의 법선이 너무 차이나거나 깊이 차이가 너무 크면 해당 표본은 흐리기에서 제외한다.
+		if( dot(neighborNormalDepth.xyz, centerNormalDepth.xyz) < 0.8f &&
+		    abs(neighborNormalDepth.a - centerNormalDepth.a) > 0.2f )
 		{
-			float weight = gWeights[i+gBlurRadius];
-
-			// Add neighbor pixel to blur.
-			color += weight*gInputImage.SampleLevel(samPoint, tex, 0.0);
-		
-			totalWeight += weight;
+			continue;
 		}
+
+		float weight = gWeights[i + gBlurRadius];
+
+		color += weight * gInputImage.SampleLevel(samPoint, tex, 0.0);
+		totalWeight += weight;
 	}
 
-	// Compensate for discarded samples by making total weights sum to 1.
+	// 적용된 가중치들과 합을 나눠준다.
 	return color / totalWeight;
 }
